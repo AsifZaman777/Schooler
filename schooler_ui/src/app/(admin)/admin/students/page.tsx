@@ -75,10 +75,17 @@ export default function StudentsPage() {
             id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
+        { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "class", header: "Class", accessorFn: r => (r.classRoomId as { name?: string })?.name ?? "—" },
-        { id: "gender", accessorKey: "gender", header: "Gender" },
-        { id: "dob", header: "Date of Birth", accessorFn: r => formatDate(r.dateOfBirth) },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        {
+            id: "parent", header: "Parent", accessorFn: r => {
+                const parent = r.parentId as { firstName?: string; lastName?: string } | undefined;
+                return parent ? `${parent.firstName} ${parent.lastName}` : "—";
+            }
+        },
+        { id: "enrollmentDate", header: "Enrolled", accessorFn: r => formatDate(r.enrollmentDate) },
+        { id: "dob", header: "DOB", accessorFn: r => formatDate(r.dateOfBirth) },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

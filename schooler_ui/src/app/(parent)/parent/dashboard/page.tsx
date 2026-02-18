@@ -55,7 +55,7 @@ export default function ParentDashboard() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-semibold text-[--success]">{formatCurrency(p.amount)}</span>
-                                                <Badge status={p.status} />
+                                                <Badge variant={p.status === "paid" ? "default" : "secondary"}>{p.status}</Badge>
                                             </div>
                                         </div>
                                     ))}
@@ -73,7 +73,7 @@ export default function ParentDashboard() {
                                     {attendances.slice(0, 5).map((a, i) => (
                                         <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
                                             <span className="text-sm text-[--foreground]">{formatDate(a.date)}</span>
-                                            <Badge status={a.status} />
+                                            <Badge variant={a.status === "present" ? "default" : "destructive"}>{a.status}</Badge>
                                         </div>
                                     ))}
                                     {attendances.length === 0 && <p className="text-sm text-[--muted-foreground]">No records found</p>}

@@ -57,10 +57,10 @@ export default function NoticesPage() {
     const columns: ColumnDef<Notice, unknown>[] = [
         { id: "title", accessorKey: "title", header: "Title" },
         { id: "category", accessorKey: "category", header: "Category" },
-        { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },
         { id: "publishDate", header: "Published", accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—" },
         { id: "expiryDate", header: "Expires", accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

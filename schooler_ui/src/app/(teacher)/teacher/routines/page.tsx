@@ -16,7 +16,7 @@ export default function TeacherRoutinesPage() {
         { id: "startTime", accessorKey: "startTime", header: "Start" },
         { id: "endTime", accessorKey: "endTime", header: "End" },
         { id: "roomNumber", accessorKey: "roomNumber", header: "Room" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     return (

@@ -59,12 +59,13 @@ export default function ExamsPage() {
     const columns: ColumnDef<Exam, unknown>[] = [
         { id: "name", accessorKey: "name", header: "Exam Name" },
         { id: "examType", accessorKey: "examType", header: "Type" },
+        { id: "course", header: "Course", accessorFn: r => { const c = r.courseId; return typeof c === "object" ? (c as { name: string }).name : String(c); } },
         { id: "class", header: "Classroom", accessorFn: r => { const c = r.classRoomId; return typeof c === "object" ? (c as { name: string }).name : String(c); } },
         { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
-        { id: "startTime", accessorKey: "startTime", header: "Start" },
+        { id: "time", header: "Time", accessorFn: r => `${r.startTime} - ${r.endTime}` },
         { id: "totalMarks", accessorKey: "totalMarks", header: "Total Marks" },
         { id: "passingMarks", accessorKey: "passingMarks", header: "Pass Marks" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "completed" ? "default" : String(getValue()) === "scheduled" ? "secondary" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

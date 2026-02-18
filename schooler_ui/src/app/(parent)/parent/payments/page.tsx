@@ -18,7 +18,7 @@ export default function ParentPaymentsPage() {
         { id: "paidDate", header: "Paid Date", accessorFn: (r) => r.paidDate ? formatDate(r.paidDate) : "—" },
         { id: "academicYear", accessorKey: "academicYear", header: "Academic Year" },
         { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "paid" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     return (

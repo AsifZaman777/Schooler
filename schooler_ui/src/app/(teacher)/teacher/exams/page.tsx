@@ -20,7 +20,7 @@ export default function TeacherExamsPage() {
         { id: "endTime", accessorKey: "endTime", header: "End" },
         { id: "totalMarks", accessorKey: "totalMarks", header: "Total" },
         { id: "passingMarks", accessorKey: "passingMarks", header: "Passing" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "completed" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     return (

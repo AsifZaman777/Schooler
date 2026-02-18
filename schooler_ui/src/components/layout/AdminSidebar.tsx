@@ -12,16 +12,34 @@ export function AdminSidebar() {
             role="admin"
             navItems={[
                 { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-                { label: "Students", href: "/admin/students", icon: GraduationCap },
-                { label: "Teachers", href: "/admin/teachers", icon: UserCheck },
-                { label: "Employees", href: "/admin/employees", icon: Briefcase },
-                { label: "Parents", href: "/admin/parents", icon: Users },
-                { label: "Departments", href: "/admin/departments", icon: Building2 },
-                { label: "Courses", href: "/admin/courses", icon: BookOpen },
-                { label: "Class Rooms", href: "/admin/classrooms", icon: DoorOpen },
-                { label: "Attendance", href: "/admin/attendance", icon: CalendarCheck },
-                { label: "Routines", href: "/admin/routines", icon: Clock },
-                { label: "Exams", href: "/admin/exams", icon: FilePen },
+                {
+                    label: "Users",
+                    icon: Users,
+                    items: [
+                        { label: "Students", href: "/admin/students", icon: GraduationCap },
+                        { label: "Teachers", href: "/admin/teachers", icon: UserCheck },
+                        { label: "Employees", href: "/admin/employees", icon: Briefcase },
+                        { label: "Parents", href: "/admin/parents", icon: Users },
+                    ],
+                },
+                {
+                    label: "Academics",
+                    icon: BookOpen,
+                    items: [
+                        { label: "Departments", href: "/admin/departments", icon: Building2 },
+                        { label: "Courses", href: "/admin/courses", icon: BookOpen },
+                        { label: "Class Rooms", href: "/admin/classrooms", icon: DoorOpen },
+                    ],
+                },
+                {
+                    label: "Exam Management",
+                    icon: FilePen,
+                    items: [
+                        { label: "Exams", href: "/admin/exams", icon: FilePen },
+                        { label: "Attendance", href: "/admin/attendance", icon: CalendarCheck },
+                        { label: "Routines", href: "/admin/routines", icon: Clock },
+                    ],
+                },
                 { label: "Payments", href: "/admin/payments", icon: CreditCard },
                 { label: "Expenses", href: "/admin/expenses", icon: Wallet },
                 { label: "Notices", href: "/admin/notices", icon: Bell },

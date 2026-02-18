@@ -60,7 +60,7 @@ export default function ExpensesPage() {
         { id: "amount", header: "Amount", accessorFn: r => formatCurrency(r.amount) },
         { id: "paymentMethod", accessorKey: "paymentMethod", header: "Method" },
         { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "approved" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

@@ -51,11 +51,13 @@ export default function ClassRoomsPage() {
     const columns: ColumnDef<ClassRoom, unknown>[] = [
         { id: "name", accessorKey: "name", header: "Class Name" },
         { id: "roomNumber", accessorKey: "roomNumber", header: "Room No." },
+        { id: "course", header: "Course", accessorFn: r => (r.courseId as { name?: string })?.name ?? "—" },
+        { id: "department", header: "Department", accessorFn: r => (r.departmentId as { name?: string })?.name ?? "—" },
         { id: "capacity", accessorKey: "capacity", header: "Capacity" },
         { id: "enrolled", accessorKey: "currentEnrollment", header: "Enrolled" },
         { id: "academicYear", accessorKey: "academicYear", header: "Academic Year" },
         { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : String(getValue()) === "completed" ? "secondary" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

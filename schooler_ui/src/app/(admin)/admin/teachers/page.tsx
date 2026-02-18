@@ -15,6 +15,7 @@ import { useTeachers } from "@/hooks/useTeachers";
 import { Teacher } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { formatDate } from "@/lib/utils";
 
 type TF = {
     firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string;
@@ -83,9 +84,11 @@ export default function TeachersPage() {
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "qualification", accessorKey: "qualification", header: "Qualification" },
-        { id: "gender", accessorKey: "gender", header: "Gender" },
+        { id: "specialization", header: "Specialization", accessorFn: r => (r.specialization ?? []).join(", ") || "—" },
+        { id: "experience", header: "Experience", accessorFn: r => `${r.experience ?? 0} yrs` },
+        { id: "joiningDate", header: "Joined", accessorFn: r => formatDate(r.joiningDate) },
         { id: "salary", header: "Salary", accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 

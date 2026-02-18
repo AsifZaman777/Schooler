@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 export interface NavItem {
     label: string;
@@ -11,19 +12,44 @@ export interface NavItem {
     badge?: string | number;
 }
 
+export interface NavGroup {
+    label: string;
+    icon: LucideIcon;
+    items: NavItem[];
+}
+
+export type NavItemOrGroup = NavItem | NavGroup;
+
+function isNavGroup(item: NavItemOrGroup): item is NavGroup {
+    return 'items' in item;
+}
+
 interface SidebarProps {
     role: "admin" | "teacher" | "parent";
-    navItems: NavItem[];
+    navItems: NavItemOrGroup[];
     logo?: React.ReactNode;
 }
 
 export function Sidebar({ role, navItems, logo }: SidebarProps) {
     const pathname = usePathname();
+    const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
     const roleLabel: Record<string, string> = {
         admin: "Administrator",
         teacher: "Teacher Portal",
         parent: "Parent Portal",
+    };
+
+    const toggleGroup = (label: string) => {
+        setOpenGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(label)) {
+                next.delete(label);
+            } else {
+                next.add(label);
+            }
+            return next;
+        });
     };
 
     return (
@@ -41,19 +67,70 @@ export function Sidebar({ role, navItems, logo }: SidebarProps) {
 
             {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5">
-                {navItems.map((item) => {
-                    const active = pathname === item.href || (item.href !== `/${role}` && pathname.startsWith(item.href));
-                    return (
-                        <Link key={item.href} href={item.href} className={cn("sidebar-item", active && "active")}>
-                            <item.icon size={16} />
-                            <span className="flex-1">{item.label}</span>
-                            {item.badge !== undefined && (
-                                <span className="ml-auto text-[10px] font-semibold bg-[--primary] text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                                    {item.badge}
-                                </span>
-                            )}
-                        </Link>
-                    );
+                {navItems.map((item, index) => {
+                    if (isNavGroup(item)) {
+                        const isOpen = openGroups.has(item.label);
+                        const hasActiveChild = item.items.some(child =>
+                            pathname === child.href || (child.href !== `/${role}` && pathname.startsWith(child.href))
+                        );
+
+                        return (
+                            <div key={index}>
+                                <button
+                                    onClick={() => toggleGroup(item.label)}
+                                    className={cn(
+                                        "sidebar-item w-full",
+                                        hasActiveChild && "active"
+                                    )}
+                                >
+                                    <item.icon size={16} />
+                                    <span className="flex-1 text-left">{item.label}</span>
+                                    <ChevronDown
+                                        size={14}
+                                        className={cn(
+                                            "transition-transform duration-200",
+                                            isOpen && "rotate-180"
+                                        )}
+                                    />
+                                </button>
+                                {isOpen && (
+                                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
+                                        {item.items.map((child) => {
+                                            const active = pathname === child.href || (child.href !== `/${role}` && pathname.startsWith(child.href));
+                                            return (
+                                                <Link
+                                                    key={child.href}
+                                                    href={child.href}
+                                                    className={cn("sidebar-item text-xs", active && "active")}
+                                                >
+                                                    <child.icon size={14} />
+                                                    <span className="flex-1">{child.label}</span>
+                                                    {child.badge !== undefined && (
+                                                        <span className="ml-auto text-[10px] font-semibold bg-[--primary] text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                            {child.badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    } else {
+                        const active = pathname === item.href || (item.href !== `/${role}` && pathname.startsWith(item.href));
+                        return (
+                            <Link key={item.href} href={item.href} className={cn("sidebar-item", active && "active")}>
+                                <item.icon size={16} />
+                                <span className="flex-1">{item.label}</span>
+                                {item.badge !== undefined && (
+                                    <span className="ml-auto text-[10px] font-semibold bg-[--primary] text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </Link>
+                        );
+                    }
                 })}
             </nav>
 

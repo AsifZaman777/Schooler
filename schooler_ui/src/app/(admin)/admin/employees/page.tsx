@@ -15,6 +15,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { Employee } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { formatDate } from "@/lib/utils";
 
 type TF = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; position: string; department: string; joiningDate: string; salary: string; status: string };
 const blank: TF = { firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", position: "", department: "", joiningDate: "", salary: "", status: "active" };
@@ -59,11 +60,12 @@ export default function EmployeesPage() {
             id: "name", header: "Employee", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
+        { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "position", accessorKey: "position", header: "Position" },
         { id: "department", header: "Department", accessorFn: r => (r.department as { name?: string })?.name ?? String(r.department) },
-        { id: "phone", accessorKey: "phone", header: "Phone" },
+        { id: "joiningDate", header: "Joined", accessorFn: r => formatDate(r.joiningDate) },
         { id: "salary", header: "Salary", accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
