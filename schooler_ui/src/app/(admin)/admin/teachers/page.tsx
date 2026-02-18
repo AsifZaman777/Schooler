@@ -16,8 +16,18 @@ import { Teacher } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 
-type TF = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; qualification: string; experience: string; joiningDate: string; salary: string; status: string };
-const blank: TF = { firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", qualification: "", experience: "", joiningDate: "", salary: "", status: "active" };
+type TF = {
+    firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string;
+    qualification: string; specialization: string; experience: string; joiningDate: string; salary: string; status: string;
+    street: string; city: string; state: string; zipCode: string; country: string;
+    emergencyName: string; emergencyRelationship: string; emergencyPhone: string;
+};
+const blank: TF = {
+    firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male",
+    qualification: "", specialization: "", experience: "", joiningDate: "", salary: "", status: "active",
+    street: "", city: "", state: "", zipCode: "", country: "",
+    emergencyName: "", emergencyRelationship: "", emergencyPhone: ""
+};
 
 export default function TeachersPage() {
     const { teachers, loading, pagination, createTeacher, updateTeacher, deleteTeacher } = useTeachers();
@@ -34,17 +44,29 @@ export default function TeachersPage() {
         setForm({
             firstName: t.firstName, lastName: t.lastName, email: t.email, phone: t.phone,
             dateOfBirth: t.dateOfBirth?.slice(0, 10) ?? "", gender: t.gender,
-            qualification: t.qualification, experience: String(t.experience ?? ""),
-            joiningDate: t.joiningDate?.slice(0, 10) ?? "", salary: String(t.salary ?? ""), status: t.status
+            qualification: t.qualification, specialization: (t.specialization ?? []).join(", "),
+            experience: String(t.experience ?? ""), joiningDate: t.joiningDate?.slice(0, 10) ?? "",
+            salary: String(t.salary ?? ""), status: t.status,
+            street: t.address?.street ?? "", city: t.address?.city ?? "", state: t.address?.state ?? "",
+            zipCode: t.address?.zipCode ?? "", country: t.address?.country ?? "",
+            emergencyName: t.emergencyContact?.name ?? "", emergencyRelationship: t.emergencyContact?.relationship ?? "",
+            emergencyPhone: t.emergencyContact?.phone ?? ""
         });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, experience: Number(form.experience), salary: Number(form.salary) };
-            if (editing) { await updateTeacher(editing._id, payload); toast.success("Teacher updated"); }
-            else { await createTeacher(payload); toast.success("Teacher added"); }
+            const payload = {
+                firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
+                dateOfBirth: form.dateOfBirth, gender: form.gender, qualification: form.qualification,
+                specialization: form.specialization.split(",").map(s => s.trim()).filter(Boolean),
+                experience: Number(form.experience), joiningDate: form.joiningDate, salary: Number(form.salary), status: form.status,
+                address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
+                emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
+            };
+            if (editing) { await updateTeacher(editing._id, payload as any); toast.success("Teacher updated"); }
+            else { await createTeacher(payload as any); toast.success("Teacher added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }
@@ -79,19 +101,30 @@ export default function TeachersPage() {
                     : <DataTable data={teachers} columns={columns} title="Teachers" exportFilename="teachers" />}
             </main>
             <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Teacher" : "Add Teacher"}>
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>First Name</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
-                        <div><Label>Last Name</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
-                        <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
-                        <div><Label>Phone</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} /></div>
-                        <div><Label>Date of Birth</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} /></div>
-                        <div><Label>Gender</Label><Select value={form.gender} onChange={e => f("gender", e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]} /></div>
-                        <div><Label>Qualification</Label><Input value={form.qualification} onChange={e => f("qualification", e.target.value)} /></div>
-                        <div><Label>Experience (yrs)</Label><Input type="number" value={form.experience} onChange={e => f("experience", e.target.value)} /></div>
+                        <div><Label>First Name*</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
+                        <div><Label>Last Name*</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
+                        <div><Label>Email*</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
+                        <div><Label>Phone*</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} required /></div>
+                        <div><Label>Date of Birth*</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} required /></div>
+                        <div><Label>Gender*</Label><Select value={form.gender} onChange={e => f("gender", e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]} /></div>
+                        <div><Label>Qualification*</Label><Input value={form.qualification} onChange={e => f("qualification", e.target.value)} required /></div>
+                        <div><Label>Specialization (comma-separated)</Label><Input value={form.specialization} onChange={e => f("specialization", e.target.value)} placeholder="Math, Science" /></div>
+                        <div><Label>Experience (years)*</Label><Input type="number" value={form.experience} onChange={e => f("experience", e.target.value)} required /></div>
                         <div><Label>Joining Date</Label><Input type="date" value={form.joiningDate} onChange={e => f("joiningDate", e.target.value)} /></div>
-                        <div><Label>Salary</Label><Input type="number" value={form.salary} onChange={e => f("salary", e.target.value)} /></div>
+                        <div><Label>Salary*</Label><Input type="number" value={form.salary} onChange={e => f("salary", e.target.value)} required /></div>
                         <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "on-leave", label: "On Leave" }]} /></div>
+                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
+                        <div><Label>Street*</Label><Input value={form.street} onChange={e => f("street", e.target.value)} required /></div>
+                        <div><Label>City*</Label><Input value={form.city} onChange={e => f("city", e.target.value)} required /></div>
+                        <div><Label>State*</Label><Input value={form.state} onChange={e => f("state", e.target.value)} required /></div>
+                        <div><Label>Zip Code*</Label><Input value={form.zipCode} onChange={e => f("zipCode", e.target.value)} required /></div>
+                        <div><Label>Country*</Label><Input value={form.country} onChange={e => f("country", e.target.value)} required /></div>
+                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p></div>
+                        <div><Label>Name*</Label><Input value={form.emergencyName} onChange={e => f("emergencyName", e.target.value)} required /></div>
+                        <div><Label>Relationship*</Label><Input value={form.emergencyRelationship} onChange={e => f("emergencyRelationship", e.target.value)} required /></div>
+                        <div><Label>Phone*</Label><Input value={form.emergencyPhone} onChange={e => f("emergencyPhone", e.target.value)} required /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

@@ -2,20 +2,23 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
-import { useApi } from "@/hooks/useApi";
+import { Badge } from "@/components/ui/badge";
+import { useRoutines } from "@/hooks/useRoutines";
 import { Routine } from "@/types";
 
-const columns: ColumnDef<Routine, unknown>[] = [
-    { id: "subject", accessorKey: "subject", header: "Subject" },
-    { id: "class", header: "Class", accessorFn: (r) => (r.class as { name?: string })?.name ?? String(r.class) },
-    { id: "day", accessorKey: "day", header: "Day" },
-    { id: "startTime", accessorKey: "startTime", header: "Start" },
-    { id: "endTime", accessorKey: "endTime", header: "End" },
-    { id: "room", accessorKey: "room", header: "Room" },
-];
-
 export default function TeacherRoutinesPage() {
-    const { data, loading } = useApi<{ data: Routine[] }>("/routines");
+    const { routines, loading } = useRoutines();
+
+    const columns: ColumnDef<Routine, unknown>[] = [
+        { id: "subject", accessorKey: "subject", header: "Subject" },
+        { id: "class", header: "Class", accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
+        { id: "dayOfWeek", accessorKey: "dayOfWeek", header: "Day" },
+        { id: "startTime", accessorKey: "startTime", header: "Start" },
+        { id: "endTime", accessorKey: "endTime", header: "End" },
+        { id: "roomNumber", accessorKey: "roomNumber", header: "Room" },
+        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge status={String(getValue())} /> },
+    ];
+
     return (
         <>
             <Header title="My Routines" userName="Teacher" />
@@ -24,7 +27,7 @@ export default function TeacherRoutinesPage() {
                 {loading ? (
                     <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
                 ) : (
-                    <DataTable data={data?.data ?? []} columns={columns} title="My Routines" exportFilename="teacher-routines" />
+                    <DataTable data={routines} columns={columns} title="My Routines" exportFilename="teacher-routines" />
                 )}
             </main>
         </>

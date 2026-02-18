@@ -1,17 +1,19 @@
 "use client";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useApi } from "@/hooks/useApi";
+import { Badge } from "@/components/ui/badge";
+import { usePayments } from "@/hooks/usePayments";
+import { useAttendance } from "@/hooks/useAttendance";
 import { CreditCard, CalendarCheck, Users } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function ParentDashboard() {
-    const { data: payments } = useApi<{ data: { amount: number; status: string }[] }>("/payments?limit=5");
-    const { data: attendance } = useApi<{ data: { status: string }[] }>("/attendance?limit=100");
+    const { payments, loading: pLoading } = usePayments();
+    const { attendances, loading: aLoading } = useAttendance();
 
-    const totalPaid = (payments?.data ?? []).filter((p) => p.status === "paid").reduce((acc, p) => acc + p.amount, 0);
-    const presentDays = (attendance?.data ?? []).filter((a) => a.status === "present").length;
-    const totalDays = (attendance?.data ?? []).length;
+    const totalPaid = payments.filter((p) => p.status === "paid").reduce((acc, p) => acc + p.amount, 0);
+    const presentDays = attendances.filter((a) => a.status === "present").length;
+    const totalDays = attendances.length;
 
     return (
         <>
@@ -43,30 +45,40 @@ export default function ParentDashboard() {
                     <Card>
                         <CardHeader><CardTitle>Recent Payments</CardTitle></CardHeader>
                         <CardContent>
-                            <div className="space-y-2">
-                                {(payments?.data ?? []).slice(0, 5).map((p, i) => (
-                                    <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
-                                        <span className="text-sm text-[--foreground]">Payment #{i + 1}</span>
-                                        <span className="text-sm font-semibold text-[--success]">{formatCurrency(p.amount)}</span>
-                                    </div>
-                                ))}
-                                {(payments?.data ?? []).length === 0 && <p className="text-sm text-[--muted-foreground]">No payments found</p>}
-                            </div>
+                            {pLoading ? <p className="text-sm text-[--muted-foreground]">Loading…</p> : (
+                                <div className="space-y-2">
+                                    {payments.slice(0, 5).map((p, i) => (
+                                        <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
+                                            <div>
+                                                <p className="text-sm text-[--foreground]">{p.paymentType}</p>
+                                                <p className="text-xs text-[--muted-foreground]">{formatDate(p.dueDate)}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-[--success]">{formatCurrency(p.amount)}</span>
+                                                <Badge status={p.status} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {payments.length === 0 && <p className="text-sm text-[--muted-foreground]">No payments found</p>}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader><CardTitle>Recent Attendance</CardTitle></CardHeader>
                         <CardContent>
-                            <div className="space-y-2">
-                                {(attendance?.data ?? []).slice(0, 5).map((a, i) => (
-                                    <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
-                                        <span className="text-sm text-[--foreground]">Day {i + 1}</span>
-                                        <span className={`text-sm font-medium ${a.status === "present" ? "text-[--success]" : "text-[--danger]"}`}>{a.status}</span>
-                                    </div>
-                                ))}
-                                {(attendance?.data ?? []).length === 0 && <p className="text-sm text-[--muted-foreground]">No records found</p>}
-                            </div>
+                            {aLoading ? <p className="text-sm text-[--muted-foreground]">Loading…</p> : (
+                                <div className="space-y-2">
+                                    {attendances.slice(0, 5).map((a, i) => (
+                                        <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
+                                            <span className="text-sm text-[--foreground]">{formatDate(a.date)}</span>
+                                            <Badge status={a.status} />
+                                        </div>
+                                    ))}
+                                    {attendances.length === 0 && <p className="text-sm text-[--muted-foreground]">No records found</p>}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

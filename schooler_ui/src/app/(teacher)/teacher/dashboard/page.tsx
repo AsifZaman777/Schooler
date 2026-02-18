@@ -1,13 +1,16 @@
 "use client";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useApi } from "@/hooks/useApi";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useRoutines } from "@/hooks/useRoutines";
+import { useExams } from "@/hooks/useExams";
 import { Clock, CalendarCheck, FilePen } from "lucide-react";
 
 export default function TeacherDashboard() {
-    const { data: routines, loading: rLoading } = useApi<{ data: { day: string; subject: string; startTime: string; endTime: string }[] }>("/routines?limit=5");
-    const { data: exams, loading: eLoading } = useApi<{ data: { name: string; subject: string; date: string }[] }>("/exams?status=upcoming&limit=5");
+    const { routines, loading: rLoading } = useRoutines();
+    const { exams, loading: eLoading } = useExams();
+    const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const todayRoutines = routines.filter((r) => r.dayOfWeek.toLowerCase() === todayName);
+    const upcomingExams = exams.filter((e) => e.status === "scheduled" || e.status === "ongoing");
 
     return (
         <>
@@ -15,9 +18,9 @@ export default function TeacherDashboard() {
             <main className="p-5 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                        { label: "My Classes Today", value: "4", icon: Clock, color: "text-[--primary]", bg: "bg-blue-50" },
-                        { label: "Pending Attendance", value: "2", icon: CalendarCheck, color: "text-[--warning]", bg: "bg-yellow-50" },
-                        { label: "Upcoming Exams", value: String(exams?.data?.length ?? 0), icon: FilePen, color: "text-[--danger]", bg: "bg-red-50" },
+                        { label: "My Classes Today", value: String(todayRoutines.length), icon: Clock, color: "text-[--primary]", bg: "bg-blue-50" },
+                        { label: "Total Routines", value: String(routines.length), icon: CalendarCheck, color: "text-[--warning]", bg: "bg-yellow-50" },
+                        { label: "Upcoming Exams", value: String(upcomingExams.length), icon: FilePen, color: "text-[--danger]", bg: "bg-red-50" },
                     ].map((s) => (
                         <Card key={s.label}>
                             <CardContent>
@@ -41,16 +44,16 @@ export default function TeacherDashboard() {
                         <CardContent>
                             {rLoading ? <p className="text-sm text-[--muted-foreground]">Loading…</p> : (
                                 <div className="space-y-2">
-                                    {(routines?.data ?? []).map((r, i) => (
+                                    {todayRoutines.map((r, i) => (
                                         <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
                                             <div>
                                                 <p className="text-sm font-medium text-[--foreground]">{r.subject}</p>
-                                                <p className="text-xs text-[--muted-foreground]">{r.day}</p>
+                                                <p className="text-xs text-[--muted-foreground]">{(r.classRoomId as { name?: string })?.name ?? ""}</p>
                                             </div>
                                             <span className="text-xs text-[--muted-foreground]">{r.startTime} – {r.endTime}</span>
                                         </div>
                                     ))}
-                                    {(routines?.data ?? []).length === 0 && <p className="text-sm text-[--muted-foreground]">No routines found</p>}
+                                    {todayRoutines.length === 0 && <p className="text-sm text-[--muted-foreground]">No classes today</p>}
                                 </div>
                             )}
                         </CardContent>
@@ -61,16 +64,16 @@ export default function TeacherDashboard() {
                         <CardContent>
                             {eLoading ? <p className="text-sm text-[--muted-foreground]">Loading…</p> : (
                                 <div className="space-y-2">
-                                    {(exams?.data ?? []).map((e, i) => (
+                                    {upcomingExams.slice(0, 5).map((e, i) => (
                                         <div key={i} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
                                             <div>
                                                 <p className="text-sm font-medium text-[--foreground]">{e.name}</p>
-                                                <p className="text-xs text-[--muted-foreground]">{e.subject}</p>
+                                                <p className="text-xs text-[--muted-foreground]">{e.examType}</p>
                                             </div>
                                             <span className="text-xs text-[--muted-foreground]">{new Date(e.date).toLocaleDateString()}</span>
                                         </div>
                                     ))}
-                                    {(exams?.data ?? []).length === 0 && <p className="text-sm text-[--muted-foreground]">No upcoming exams</p>}
+                                    {upcomingExams.length === 0 && <p className="text-sm text-[--muted-foreground]">No upcoming exams</p>}
                                 </div>
                             )}
                         </CardContent>
