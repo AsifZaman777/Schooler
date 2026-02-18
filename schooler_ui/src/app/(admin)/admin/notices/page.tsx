@@ -5,15 +5,15 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
+import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useNotices } from "@/hooks/useNotices";
 import { Notice } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
 type TF = { title: string; content: string; category: string; targetAudience: string; publishDate: string; expiryDate: string; priority: string; status: string };
@@ -75,7 +75,7 @@ export default function NoticesPage() {
                 {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                     : <DataTable data={notices} columns={columns} title="Notices" exportFilename="notices" />}
             </main>
-            <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Notice" : "Post Notice"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Notice" : "Post Notice"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="col-span-2"><Label>Title</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
@@ -92,7 +92,7 @@ export default function NoticesPage() {
                         <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Publish"}</Button>
                     </div>
                 </form>
-            </Dialog>
+            </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
                 message={`Delete notice "${confirm?.title}"? This cannot be undone.`} />
         </>

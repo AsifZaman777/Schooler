@@ -5,15 +5,15 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { Dialog } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
+import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useParents } from "@/hooks/useParents";
 import { Parent } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/lib/toast";
 
 type TF = { firstName: string; lastName: string; email: string; phone: string; occupation: string; relationship: string };
 const blank: TF = { firstName: "", lastName: "", email: "", phone: "", occupation: "", relationship: "father" };
@@ -69,7 +69,7 @@ export default function ParentsPage() {
                 {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                     : <DataTable data={parents} columns={columns} title="Parents" exportFilename="parents" />}
             </main>
-            <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Parent" : "Add Parent"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Parent" : "Add Parent"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div><Label>First Name</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
@@ -84,7 +84,7 @@ export default function ParentsPage() {
                         <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
                     </div>
                 </form>
-            </Dialog>
+            </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
                 message={`Delete ${confirm?.firstName} ${confirm?.lastName}? This cannot be undone.`} />
         </>

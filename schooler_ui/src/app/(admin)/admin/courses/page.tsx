@@ -5,15 +5,15 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
+import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useCourses } from "@/hooks/useCourses";
 import { Course } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/lib/toast";
 
 type TF = { name: string; code: string; description: string; credits: string; duration: string; status: string };
 const blank: TF = { name: "", code: "", description: "", credits: "", duration: "", status: "active" };
@@ -69,7 +69,7 @@ export default function CoursesPage() {
                 {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                     : <DataTable data={courses} columns={columns} title="Courses" exportFilename="courses" />}
             </main>
-            <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Course" : "Add Course"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Course" : "Add Course"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div><Label>Course Name</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
@@ -84,7 +84,7 @@ export default function CoursesPage() {
                         <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
                     </div>
                 </form>
-            </Dialog>
+            </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
                 message={`Delete course "${confirm?.name}"? This cannot be undone.`} />
         </>

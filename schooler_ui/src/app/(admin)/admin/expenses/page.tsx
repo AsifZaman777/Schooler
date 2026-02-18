@@ -5,15 +5,15 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
+import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useExpenses } from "@/hooks/useExpenses";
 import { Expense } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/lib/toast";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 type TF = { category: string; subcategory: string; amount: string; description: string; date: string; paymentMethod: string; transactionId: string; status: string; remarks: string };
@@ -75,7 +75,7 @@ export default function ExpensesPage() {
                 {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                     : <DataTable data={expenses} columns={columns} title="Expenses" exportFilename="expenses" />}
             </main>
-            <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Expense" : "Add Expense"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Expense" : "Add Expense"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div><Label>Category</Label><Select value={form.category} onChange={e => f("category", e.target.value)} options={[{ value: "salary", label: "Salary" }, { value: "fixed", label: "Fixed" }, { value: "other", label: "Other" }]} /></div>
@@ -93,7 +93,7 @@ export default function ExpensesPage() {
                         <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
                     </div>
                 </form>
-            </Dialog>
+            </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
                 message="Delete this expense record? This cannot be undone." />
         </>

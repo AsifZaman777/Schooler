@@ -5,15 +5,15 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
+import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { usePayments } from "@/hooks/usePayments";
 import { Payment } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/lib/toast";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 type TF = { studentId: string; amount: string; paymentType: string; paymentMethod: string; transactionId: string; dueDate: string; paidDate: string; status: string; academicYear: string; semester: string; remarks: string };
@@ -77,7 +77,7 @@ export default function PaymentsPage() {
                 {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                     : <DataTable data={payments} columns={columns} title="Payments" exportFilename="payments" />}
             </main>
-            <Dialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div><Label>Student ID</Label><Input value={form.studentId} onChange={e => f("studentId", e.target.value)} required /></div>
@@ -97,7 +97,7 @@ export default function PaymentsPage() {
                         <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
                     </div>
                 </form>
-            </Dialog>
+            </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
                 message="Delete this payment record? This cannot be undone." />
         </>
