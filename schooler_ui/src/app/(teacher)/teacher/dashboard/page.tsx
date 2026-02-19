@@ -14,7 +14,7 @@ export default function TeacherDashboard() {
 
     return (
         <>
-            <Header title="Teacher Dashboard" userName="Teacher" />
+            <Header title="Teacher Dashboard" />
             <main className="p-5 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[

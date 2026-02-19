@@ -17,7 +17,7 @@ export default function ParentDashboard() {
 
     return (
         <>
-            <Header title="Parent Dashboard" userName="Parent" />
+            <Header title="Parent Dashboard" />
             <main className="p-5 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[

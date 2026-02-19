@@ -21,7 +21,7 @@ export default function TeacherRoutinesPage() {
 
     return (
         <>
-            <Header title="My Routines" userName="Teacher" />
+            <Header title="My Routines" />
             <main className="p-5 space-y-4">
                 <h2 className="text-base font-semibold text-[--foreground]">My Class Routines</h2>
                 {loading ? (

@@ -20,7 +20,7 @@ export default function ParentAttendancePage() {
 
     return (
         <>
-            <Header title="Child Attendance" userName="Parent" />
+            <Header title="Child Attendance" />
             <main className="p-5 space-y-4">
                 <h2 className="text-base font-semibold text-[--foreground]">Attendance Records</h2>
                 {loading ? (

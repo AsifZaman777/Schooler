@@ -23,7 +23,7 @@ export default function ParentPaymentsPage() {
 
     return (
         <>
-            <Header title="Payments" userName="Parent" />
+            <Header title="Payments" />
             <main className="p-5 space-y-4">
                 <h2 className="text-base font-semibold text-[--foreground]">Payment History</h2>
                 {loading ? (

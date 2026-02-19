@@ -49,7 +49,7 @@ export default function TeacherAttendancePage() {
 
     return (
         <>
-            <Header title="Attendance" userName="Teacher" />
+            <Header title="Attendance" />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-base font-semibold text-[--foreground]">Attendance Records</h2>

@@ -25,7 +25,7 @@ export default function TeacherExamsPage() {
 
     return (
         <>
-            <Header title="Exams" userName="Teacher" />
+            <Header title="Exams" />
             <main className="p-5 space-y-4">
                 <h2 className="text-base font-semibold text-[--foreground]">Exams</h2>
                 {loading ? (
