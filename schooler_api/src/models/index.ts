@@ -12,3 +12,4 @@ export { Payment, IPayment } from "./Payment";
 export { Routine, IRoutine } from "./Routine";
 export { Student, IStudent } from "./Student";
 export { Teacher, ITeacher } from "./Teacher";
+export { User, IUser } from "./User";
