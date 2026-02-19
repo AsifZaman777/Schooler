@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRoutines } from "@/hooks/useRoutines";
 import { Routine } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -19,6 +19,20 @@ const DAY_OPTIONS = ["monday", "tuesday", "wednesday", "thursday", "friday", "sa
 
 type TF = { classRoomId: string; teacherId: string; subject: string; dayOfWeek: string; startTime: string; endTime: string; roomNumber: string; status: string };
 const blank: TF = { classRoomId: "", teacherId: "", subject: "", dayOfWeek: "monday", startTime: "", endTime: "", roomNumber: "", status: "active" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "classRoomId", label: "Classroom ID", type: "text", required: true },
+    { key: "teacherId", label: "Teacher ID", type: "text", required: true },
+    { key: "subject", label: "Subject", type: "text", required: true },
+];
+
+const timeFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "startTime", label: "Start Time", type: "time", required: false },
+    { key: "endTime", label: "End Time", type: "time", required: false },
+    { key: "roomNumber", label: "Room Number", type: "text", required: false },
+];
+
+const statusOptions = [{ value: "active", label: "Active" }, { value: "cancelled", label: "Cancelled" }, { value: "rescheduled", label: "Rescheduled" }];
 
 export default function RoutinesPage() {
     const { routines, loading, createRoutine, updateRoutine, deleteRoutine } = useRoutines();
@@ -80,14 +94,32 @@ export default function RoutinesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Routine" : "Add Routine"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Classroom ID</Label><Input value={form.classRoomId} onChange={e => f("classRoomId", e.target.value)} required /></div>
-                        <div><Label>Teacher ID</Label><Input value={form.teacherId} onChange={e => f("teacherId", e.target.value)} required /></div>
-                        <div><Label>Subject</Label><Input value={form.subject} onChange={e => f("subject", e.target.value)} required /></div>
-                        <div><Label>Day</Label><Select value={form.dayOfWeek} onChange={e => f("dayOfWeek", e.target.value)} options={DAY_OPTIONS} /></div>
-                        <div><Label>Start Time</Label><Input type="time" value={form.startTime} onChange={e => f("startTime", e.target.value)} /></div>
-                        <div><Label>End Time</Label><Input type="time" value={form.endTime} onChange={e => f("endTime", e.target.value)} /></div>
-                        <div><Label>Room Number</Label><Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "cancelled", label: "Cancelled" }, { value: "rescheduled", label: "Rescheduled" }]} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Day</Label>
+                            <Select value={form.dayOfWeek} onValueChange={v => f("dayOfWeek", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{DAY_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {timeFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

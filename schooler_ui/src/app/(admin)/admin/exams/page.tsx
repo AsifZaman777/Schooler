@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExams } from "@/hooks/useExams";
 import { Exam } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -18,6 +18,26 @@ import { formatDate } from "@/lib/utils";
 
 type TF = { name: string; examType: string; courseId: string; classRoomId: string; date: string; startTime: string; endTime: string; totalMarks: string; passingMarks: string; instructions: string; status: string };
 const blank: TF = { name: "", examType: "midterm", courseId: "", classRoomId: "", date: "", startTime: "", endTime: "", totalMarks: "", passingMarks: "", instructions: "", status: "scheduled" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "name", label: "Exam Name", type: "text", required: true },
+    { key: "courseId", label: "Course ID", type: "text", required: true },
+    { key: "classRoomId", label: "Classroom ID", type: "text", required: true },
+];
+
+const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "date", label: "Date", type: "date", required: false },
+    { key: "startTime", label: "Start Time", type: "time", required: false },
+    { key: "endTime", label: "End Time", type: "time", required: false },
+];
+
+const marksFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "totalMarks", label: "Total Marks", type: "number", required: false },
+    { key: "passingMarks", label: "Passing Marks", type: "number", required: false },
+];
+
+const examTypeOptions = [{ value: "midterm", label: "Midterm" }, { value: "final", label: "Final" }, { value: "quiz", label: "Quiz" }, { value: "assignment", label: "Assignment" }, { value: "practical", label: "Practical" }];
+const statusOptions = [{ value: "scheduled", label: "Scheduled" }, { value: "ongoing", label: "Ongoing" }, { value: "completed", label: "Completed" }, { value: "cancelled", label: "Cancelled" }];
 
 export default function ExamsPage() {
     const { exams, loading, pagination, createExam, updateExam, deleteExam } = useExams();
@@ -83,16 +103,38 @@ export default function ExamsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Exam" : "Add Exam"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Exam Name</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Type</Label><Select value={form.examType} onChange={e => f("examType", e.target.value)} options={[{ value: "midterm", label: "Midterm" }, { value: "final", label: "Final" }, { value: "quiz", label: "Quiz" }, { value: "assignment", label: "Assignment" }, { value: "practical", label: "Practical" }]} /></div>
-                        <div><Label>Course ID</Label><Input value={form.courseId} onChange={e => f("courseId", e.target.value)} required /></div>
-                        <div><Label>Classroom ID</Label><Input value={form.classRoomId} onChange={e => f("classRoomId", e.target.value)} required /></div>
-                        <div><Label>Date</Label><Input type="date" value={form.date} onChange={e => f("date", e.target.value)} /></div>
-                        <div><Label>Start Time</Label><Input type="time" value={form.startTime} onChange={e => f("startTime", e.target.value)} /></div>
-                        <div><Label>End Time</Label><Input type="time" value={form.endTime} onChange={e => f("endTime", e.target.value)} /></div>
-                        <div><Label>Total Marks</Label><Input type="number" value={form.totalMarks} onChange={e => f("totalMarks", e.target.value)} /></div>
-                        <div><Label>Passing Marks</Label><Input type="number" value={form.passingMarks} onChange={e => f("passingMarks", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "scheduled", label: "Scheduled" }, { value: "ongoing", label: "Ongoing" }, { value: "completed", label: "Completed" }, { value: "cancelled", label: "Cancelled" }]} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Type</Label>
+                            <Select value={form.examType} onValueChange={v => f("examType", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{examTypeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {scheduleFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
+                        {marksFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                         <div className="col-span-2"><Label>Instructions</Label><Input value={form.instructions} onChange={e => f("instructions", e.target.value)} /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
@@ -101,8 +143,11 @@ export default function ExamsPage() {
                     </div>
                 </form>
             </FormDialog>
-            <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-                message={`Delete exam "${confirm?.name}"? This cannot be undone.`} />
+        </div >
+                </form >
+            </FormDialog >
+        <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
+            message={`Delete exam "${confirm?.name}"? This cannot be undone.`} />
         </>
     );
 }

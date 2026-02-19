@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExpenses } from "@/hooks/useExpenses";
 import { Expense } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -18,6 +18,17 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 
 type TF = { category: string; subcategory: string; amount: string; description: string; date: string; paymentMethod: string; transactionId: string; status: string; remarks: string };
 const blank: TF = { category: "other", subcategory: "", amount: "", description: "", date: "", paymentMethod: "cash", transactionId: "", status: "pending", remarks: "" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "subcategory", label: "Subcategory", type: "text", required: false },
+    { key: "amount", label: "Amount", type: "number", required: true },
+    { key: "date", label: "Date", type: "date", required: false },
+    { key: "transactionId", label: "Transaction ID", type: "text", required: false },
+];
+
+const categoryOptions = [{ value: "salary", label: "Salary" }, { value: "fixed", label: "Fixed" }, { value: "other", label: "Other" }];
+const paymentMethodOptions = [{ value: "cash", label: "Cash" }, { value: "card", label: "Card" }, { value: "bank-transfer", label: "Bank Transfer" }, { value: "cheque", label: "Cheque" }];
+const statusOptions = [{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }, { value: "paid", label: "Paid" }, { value: "rejected", label: "Rejected" }];
 
 export default function ExpensesPage() {
     const { expenses, loading, pagination, createExpense, updateExpense, deleteExpense } = useExpenses();
@@ -78,13 +89,33 @@ export default function ExpensesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Expense" : "Add Expense"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Category</Label><Select value={form.category} onChange={e => f("category", e.target.value)} options={[{ value: "salary", label: "Salary" }, { value: "fixed", label: "Fixed" }, { value: "other", label: "Other" }]} /></div>
-                        <div><Label>Subcategory</Label><Input value={form.subcategory} onChange={e => f("subcategory", e.target.value)} /></div>
-                        <div><Label>Amount</Label><Input type="number" value={form.amount} onChange={e => f("amount", e.target.value)} required /></div>
-                        <div><Label>Date</Label><Input type="date" value={form.date} onChange={e => f("date", e.target.value)} /></div>
-                        <div><Label>Payment Method</Label><Select value={form.paymentMethod} onChange={e => f("paymentMethod", e.target.value)} options={[{ value: "cash", label: "Cash" }, { value: "card", label: "Card" }, { value: "bank-transfer", label: "Bank Transfer" }, { value: "cheque", label: "Cheque" }]} /></div>
-                        <div><Label>Transaction ID</Label><Input value={form.transactionId} onChange={e => f("transactionId", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }, { value: "paid", label: "Paid" }, { value: "rejected", label: "Rejected" }]} /></div>
+                        <div>
+                            <Label>Category</Label>
+                            <Select value={form.category} onValueChange={v => f("category", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{categoryOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Payment Method</Label>
+                            <Select value={form.paymentMethod} onValueChange={v => f("paymentMethod", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{paymentMethodOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div className="col-span-2"><Label>Remarks</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>
                     </div>

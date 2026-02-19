@@ -9,14 +9,20 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useParents } from "@/hooks/useParents";
 import { Parent } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-type TF = { firstName: string; lastName: string; email: string; phone: string; occupation: string; relationship: string };
-const blank: TF = { firstName: "", lastName: "", email: "", phone: "", occupation: "", relationship: "father" };
+type TF = {
+    firstName: string; lastName: string; email: string; phone: string; occupation: string; relationship: string;
+    street: string; city: string; state: string; zipCode: string; country: string;
+};
+const blank: TF = {
+    firstName: "", lastName: "", email: "", phone: "", occupation: "", relationship: "father",
+    street: "", city: "", state: "", zipCode: "", country: ""
+};
 
 export default function ParentsPage() {
     const { parents, loading, pagination, createParent, updateParent, deleteParent } = useParents();
@@ -27,17 +33,49 @@ export default function ParentsPage() {
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
 
+    const basicFields = [
+        { key: "firstName" as keyof TF, label: "First Name", type: "text", required: true },
+        { key: "lastName" as keyof TF, label: "Last Name", type: "text", required: true },
+        { key: "email" as keyof TF, label: "Email", type: "email", required: true },
+        { key: "phone" as keyof TF, label: "Phone", type: "text", required: true },
+        { key: "occupation" as keyof TF, label: "Occupation", type: "text", required: false },
+    ];
+
+    const addressFields = [
+        { key: "street" as keyof TF, label: "Street", required: true },
+        { key: "city" as keyof TF, label: "City", required: true },
+        { key: "state" as keyof TF, label: "State", required: true },
+        { key: "zipCode" as keyof TF, label: "Zip Code", required: true },
+        { key: "country" as keyof TF, label: "Country", required: true },
+    ];
+
+    const relationshipOptions = [
+        { value: "father", label: "Father" },
+        { value: "mother", label: "Mother" },
+        { value: "guardian", label: "Guardian" },
+    ];
+
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(p: Parent) {
         setEditing(p);
-        setForm({ firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone, occupation: p.occupation ?? "", relationship: p.relationship });
+        setForm({
+            firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone,
+            occupation: p.occupation ?? "", relationship: p.relationship,
+            street: p.address?.street ?? "", city: p.address?.city ?? "", state: p.address?.state ?? "",
+            zipCode: p.address?.zipCode ?? "", country: p.address?.country ?? ""
+        });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            if (editing) { await updateParent(editing._id, form); toast.success("Parent updated"); }
-            else { await createParent(form); toast.success("Parent added"); }
+            const payload: any = {
+                firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
+                occupation: form.occupation, relationship: form.relationship,
+                address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country }
+            };
+            if (editing) { await updateParent(editing._id, payload); toast.success("Parent updated"); }
+            else { await createParent(payload); toast.success("Parent added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }
@@ -50,7 +88,7 @@ export default function ParentsPage() {
     const columns: ColumnDef<Parent, unknown>[] = [
         {
             id: "name", header: "Parent", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "relationship", accessorKey: "relationship", header: "Relationship" },
@@ -72,12 +110,39 @@ export default function ParentsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Parent" : "Add Parent"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>First Name</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
-                        <div><Label>Last Name</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
-                        <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
-                        <div><Label>Phone</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} /></div>
-                        <div><Label>Occupation</Label><Input value={form.occupation} onChange={e => f("occupation", e.target.value)} /></div>
-                        <div><Label>Relationship</Label><Select value={form.relationship} onChange={e => f("relationship", e.target.value)} options={[{ value: "father", label: "Father" }, { value: "mother", label: "Mother" }, { value: "guardian", label: "Guardian" }]} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    type={field.type}
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Relationship*</Label>
+                            <Select value={form.relationship} onValueChange={v => f("relationship", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select relationship" /></SelectTrigger>
+                                <SelectContent>
+                                    {relationshipOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
+                        {addressFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

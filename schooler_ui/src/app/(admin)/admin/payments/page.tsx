@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePayments } from "@/hooks/usePayments";
 import { Payment } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -18,6 +18,26 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 
 type TF = { studentId: string; amount: string; paymentType: string; paymentMethod: string; transactionId: string; dueDate: string; paidDate: string; status: string; academicYear: string; semester: string; remarks: string };
 const blank: TF = { studentId: "", amount: "", paymentType: "tuition", paymentMethod: "cash", transactionId: "", dueDate: "", paidDate: "", status: "pending", academicYear: "", semester: "", remarks: "" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "studentId", label: "Student ID", type: "text", required: true },
+    { key: "amount", label: "Amount", type: "number", required: true },
+];
+
+const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "transactionId", label: "Transaction ID", type: "text", required: false },
+    { key: "dueDate", label: "Due Date", type: "date", required: false },
+    { key: "paidDate", label: "Paid Date", type: "date", required: false },
+];
+
+const academicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "academicYear", label: "Academic Year", type: "text", required: false },
+    { key: "semester", label: "Semester", type: "text", required: false },
+];
+
+const paymentTypeOptions = [{ value: "tuition", label: "Tuition" }, { value: "exam", label: "Exam" }, { value: "library", label: "Library" }, { value: "transport", label: "Transport" }, { value: "hostel", label: "Hostel" }, { value: "other", label: "Other" }];
+const paymentMethodOptions = [{ value: "cash", label: "Cash" }, { value: "card", label: "Card" }, { value: "bank-transfer", label: "Bank Transfer" }, { value: "online", label: "Online" }];
+const statusOptions = [{ value: "pending", label: "Pending" }, { value: "paid", label: "Paid" }, { value: "overdue", label: "Overdue" }, { value: "cancelled", label: "Cancelled" }];
 
 export default function PaymentsPage() {
     const { payments, loading, pagination, createPayment, updatePayment, deletePayment } = usePayments();
@@ -80,16 +100,45 @@ export default function PaymentsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Student ID</Label><Input value={form.studentId} onChange={e => f("studentId", e.target.value)} required /></div>
-                        <div><Label>Amount</Label><Input type="number" value={form.amount} onChange={e => f("amount", e.target.value)} required /></div>
-                        <div><Label>Payment Type</Label><Select value={form.paymentType} onChange={e => f("paymentType", e.target.value)} options={[{ value: "tuition", label: "Tuition" }, { value: "exam", label: "Exam" }, { value: "library", label: "Library" }, { value: "transport", label: "Transport" }, { value: "hostel", label: "Hostel" }, { value: "other", label: "Other" }]} /></div>
-                        <div><Label>Payment Method</Label><Select value={form.paymentMethod} onChange={e => f("paymentMethod", e.target.value)} options={[{ value: "cash", label: "Cash" }, { value: "card", label: "Card" }, { value: "bank-transfer", label: "Bank Transfer" }, { value: "online", label: "Online" }]} /></div>
-                        <div><Label>Transaction ID</Label><Input value={form.transactionId} onChange={e => f("transactionId", e.target.value)} /></div>
-                        <div><Label>Due Date</Label><Input type="date" value={form.dueDate} onChange={e => f("dueDate", e.target.value)} /></div>
-                        <div><Label>Paid Date</Label><Input type="date" value={form.paidDate} onChange={e => f("paidDate", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "pending", label: "Pending" }, { value: "paid", label: "Paid" }, { value: "overdue", label: "Overdue" }, { value: "cancelled", label: "Cancelled" }]} /></div>
-                        <div><Label>Academic Year</Label><Input value={form.academicYear} onChange={e => f("academicYear", e.target.value)} /></div>
-                        <div><Label>Semester</Label><Input value={form.semester} onChange={e => f("semester", e.target.value)} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Payment Type</Label>
+                            <Select value={form.paymentType} onValueChange={v => f("paymentType", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{paymentTypeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Payment Method</Label>
+                            <Select value={form.paymentMethod} onValueChange={v => f("paymentMethod", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{paymentMethodOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {dateFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {academicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
                         <div className="col-span-2"><Label>Remarks</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">

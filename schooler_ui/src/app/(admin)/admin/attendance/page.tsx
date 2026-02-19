@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAttendance } from "@/hooks/useAttendance";
 import { Attendance } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -18,6 +18,14 @@ import { formatDate } from "@/lib/utils";
 
 type TF = { studentId: string; classRoomId: string; date: string; status: string; remarks: string };
 const blank: TF = { studentId: "", classRoomId: "", date: "", status: "present", remarks: "" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "studentId", label: "Student ID", type: "text", required: true },
+    { key: "classRoomId", label: "Classroom ID", type: "text", required: true },
+    { key: "date", label: "Date", type: "date", required: true },
+];
+
+const statusOptions = [{ value: "present", label: "Present" }, { value: "absent", label: "Absent" }, { value: "late", label: "Late" }, { value: "excused", label: "Excused" }];
 
 export default function AttendancePage() {
     const { attendances, loading, pagination, createAttendance, updateAttendance, deleteAttendance } = useAttendance();
@@ -75,10 +83,19 @@ export default function AttendancePage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Attendance" : "Mark Attendance"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Student ID</Label><Input value={form.studentId} onChange={e => f("studentId", e.target.value)} required /></div>
-                        <div><Label>Classroom ID</Label><Input value={form.classRoomId} onChange={e => f("classRoomId", e.target.value)} required /></div>
-                        <div><Label>Date</Label><Input type="date" value={form.date} onChange={e => f("date", e.target.value)} required /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "present", label: "Present" }, { value: "absent", label: "Absent" }, { value: "late", label: "Late" }, { value: "excused", label: "Excused" }]} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                         <div className="col-span-2"><Label>Remarks</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">

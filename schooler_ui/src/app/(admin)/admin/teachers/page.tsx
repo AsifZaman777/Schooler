@@ -43,6 +43,48 @@ export default function TeachersPage() {
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
 
+    const basicFields = [
+        { key: "firstName" as keyof TF, label: "First Name", type: "text", required: true },
+        { key: "lastName" as keyof TF, label: "Last Name", type: "text", required: true },
+        { key: "email" as keyof TF, label: "Email", type: "email", required: true },
+        { key: "phone" as keyof TF, label: "Phone", type: "text", required: true },
+        { key: "dateOfBirth" as keyof TF, label: "Date of Birth", type: "date", required: true },
+    ];
+
+    const teacherFields = [
+        { key: "qualification" as keyof TF, label: "Qualification", type: "text", required: true },
+        { key: "specialization" as keyof TF, label: "Specialization (comma-separated)", type: "text", required: false, placeholder: "Math, Science" },
+        { key: "experience" as keyof TF, label: "Experience (years)", type: "number", required: true },
+        { key: "joiningDate" as keyof TF, label: "Joining Date", type: "date", required: false },
+        { key: "salary" as keyof TF, label: "Salary", type: "number", required: true },
+    ];
+
+    const addressFields = [
+        { key: "street" as keyof TF, label: "Street", required: true },
+        { key: "city" as keyof TF, label: "City", required: true },
+        { key: "state" as keyof TF, label: "State", required: true },
+        { key: "zipCode" as keyof TF, label: "Zip Code", required: true },
+        { key: "country" as keyof TF, label: "Country", required: true },
+    ];
+
+    const emergencyFields = [
+        { key: "emergencyName" as keyof TF, label: "Name", required: true },
+        { key: "emergencyRelationship" as keyof TF, label: "Relationship", required: true },
+        { key: "emergencyPhone" as keyof TF, label: "Phone", required: true },
+    ];
+
+    const genderOptions = [
+        { value: "male", label: "Male" },
+        { value: "female", label: "Female" },
+        { value: "other", label: "Other" },
+    ];
+
+    const statusOptions = [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+        { value: "on-leave", label: "On Leave" },
+    ];
+
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(t: Teacher) {
         setEditing(t);
@@ -112,35 +154,48 @@ export default function TeachersPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Teacher" : "Add Teacher"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>First Name*</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
-                        <div><Label>Last Name*</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
-                        <div><Label>Email*</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
-                        <div><Label>Phone*</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} required /></div>
-                        <div><Label>Date of Birth*</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} required /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    type={field.type}
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
                         <div>
                             <Label>Gender*</Label>
                             <Select value={form.gender} onValueChange={v => f("gender", v)} required>
                                 <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="male">Male</SelectItem>
-                                    <SelectItem value="female">Female</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
+                                    {genderOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div><Label>Qualification*</Label><Input value={form.qualification} onChange={e => f("qualification", e.target.value)} required /></div>
-                        <div><Label>Specialization (comma-separated)</Label><Input value={form.specialization} onChange={e => f("specialization", e.target.value)} placeholder="Math, Science" /></div>
-                        <div><Label>Experience (years)*</Label><Input type="number" value={form.experience} onChange={e => f("experience", e.target.value)} required /></div>
-                        <div><Label>Joining Date</Label><Input type="date" value={form.joiningDate} onChange={e => f("joiningDate", e.target.value)} /></div>
-                        <div><Label>Salary*</Label><Input type="number" value={form.salary} onChange={e => f("salary", e.target.value)} required /></div>
+                        {teacherFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    type={field.type}
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                    placeholder={field.placeholder}
+                                />
+                            </div>
+                        ))}
                         <div>
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={v => f("status", v)}>
                                 <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="on-leave">On Leave</SelectItem>
+                                    {statusOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -158,15 +213,27 @@ export default function TeachersPage() {
                             </Select>
                         </div>
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
-                        <div><Label>Street*</Label><Input value={form.street} onChange={e => f("street", e.target.value)} required /></div>
-                        <div><Label>City*</Label><Input value={form.city} onChange={e => f("city", e.target.value)} required /></div>
-                        <div><Label>State*</Label><Input value={form.state} onChange={e => f("state", e.target.value)} required /></div>
-                        <div><Label>Zip Code*</Label><Input value={form.zipCode} onChange={e => f("zipCode", e.target.value)} required /></div>
-                        <div><Label>Country*</Label><Input value={form.country} onChange={e => f("country", e.target.value)} required /></div>
+                        {addressFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p></div>
-                        <div><Label>Name*</Label><Input value={form.emergencyName} onChange={e => f("emergencyName", e.target.value)} required /></div>
-                        <div><Label>Relationship*</Label><Input value={form.emergencyRelationship} onChange={e => f("emergencyRelationship", e.target.value)} required /></div>
-                        <div><Label>Phone*</Label><Input value={form.emergencyPhone} onChange={e => f("emergencyPhone", e.target.value)} required /></div>
+                        {emergencyFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

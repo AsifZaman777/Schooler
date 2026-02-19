@@ -19,6 +19,18 @@ import { toast } from "@/lib/toast";
 type TF = { name: string; code: string; description: string; departmentId: string; credits: string; duration: string; status: string };
 const blank: TF = { name: "", code: "", description: "", departmentId: "", credits: "", duration: "", status: "active" };
 
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "name", label: "Course Name", type: "text", required: true },
+    { key: "code", label: "Code", type: "text", required: true },
+];
+
+const detailFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "credits", label: "Credits", type: "number", required: true },
+    { key: "duration", label: "Duration (months)", type: "number", required: true },
+];
+
+const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }];
+
 export default function CoursesPage() {
     const { courses, loading, pagination, createCourse, updateCourse, deleteCourse } = useCourses();
     const { departments } = useDepartments();
@@ -78,11 +90,15 @@ export default function CoursesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Course" : "Add Course"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Course Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Code*</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div>
-                            <Label>Department*</Label>
+                            <Label>Department *</Label>
                             <Select value={form.departmentId} onValueChange={v => f("departmentId", v)} required>
                                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                                 <SelectContent>
@@ -94,16 +110,17 @@ export default function CoursesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div><Label>Credits*</Label><Input type="number" value={form.credits} onChange={e => f("credits", e.target.value)} required /></div>
-                        <div><Label>Duration (months)*</Label><Input type="number" value={form.duration} onChange={e => f("duration", e.target.value)} required /></div>
+                        {detailFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
                         <div>
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                </SelectContent>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                     </div>

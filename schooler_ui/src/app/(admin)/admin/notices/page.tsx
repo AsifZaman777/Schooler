@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNotices } from "@/hooks/useNotices";
 import { Notice } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -18,6 +18,15 @@ import { formatDate } from "@/lib/utils";
 
 type TF = { title: string; content: string; category: string; targetAudience: string; publishDate: string; expiryDate: string; priority: string; status: string };
 const blank: TF = { title: "", content: "", category: "general", targetAudience: "all", publishDate: "", expiryDate: "", priority: "medium", status: "draft" };
+
+const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "publishDate", label: "Publish Date", type: "date", required: false },
+    { key: "expiryDate", label: "Expiry Date", type: "date", required: false },
+];
+
+const categoryOptions = [{ value: "general", label: "General" }, { value: "academic", label: "Academic" }, { value: "exam", label: "Exam" }, { value: "event", label: "Event" }, { value: "holiday", label: "Holiday" }, { value: "urgent", label: "Urgent" }];
+const priorityOptions = [{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }];
+const statusOptions = [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }, { value: "archived", label: "Archived" }];
 
 export default function NoticesPage() {
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } = useNotices();
@@ -78,14 +87,36 @@ export default function NoticesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Notice" : "Post Notice"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="col-span-2"><Label>Title</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
-                        <div><Label>Category</Label><Select value={form.category} onChange={e => f("category", e.target.value)} options={[{ value: "general", label: "General" }, { value: "academic", label: "Academic" }, { value: "exam", label: "Exam" }, { value: "event", label: "Event" }, { value: "holiday", label: "Holiday" }, { value: "urgent", label: "Urgent" }]} /></div>
-                        <div><Label>Priority</Label><Select value={form.priority} onChange={e => f("priority", e.target.value)} options={[{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }]} /></div>
+                        <div className="col-span-2"><Label>Title *</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
+                        <div>
+                            <Label>Category</Label>
+                            <Select value={form.category} onValueChange={v => f("category", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{categoryOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Priority</Label>
+                            <Select value={form.priority} onValueChange={v => f("priority", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{priorityOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                         <div><Label>Target Audience (comma-separated)</Label><Input value={form.targetAudience} onChange={e => f("targetAudience", e.target.value)} placeholder="all, students, teachers" /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }, { value: "archived", label: "Archived" }]} /></div>
-                        <div><Label>Publish Date</Label><Input type="date" value={form.publishDate} onChange={e => f("publishDate", e.target.value)} /></div>
-                        <div><Label>Expiry Date</Label><Input type="date" value={form.expiryDate} onChange={e => f("expiryDate", e.target.value)} /></div>
-                        <div className="col-span-2"><Label>Content</Label><textarea className="flex min-h-[80px] w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        {dateFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                            </div>
+                        ))}
+                        <div className="col-span-2"><Label>Content *</Label><textarea className="flex min-h-[80px] w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

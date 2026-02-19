@@ -20,6 +20,19 @@ import { toast } from "@/lib/toast";
 type TF = { name: string; roomNumber: string; departmentId: string; courseId: string; capacity: string; academicYear: string; semester: string; status: string };
 const blank: TF = { name: "", roomNumber: "", departmentId: "", courseId: "", capacity: "", academicYear: "", semester: "", status: "active" };
 
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "name", label: "Class Name", type: "text", required: true },
+    { key: "roomNumber", label: "Room Number", type: "text", required: true },
+];
+
+const detailFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "capacity", label: "Capacity", type: "number", required: true },
+    { key: "academicYear", label: "Academic Year", type: "text", required: true, placeholder: "2024-2025" },
+    { key: "semester", label: "Semester", type: "text", required: true, placeholder: "Spring" },
+];
+
+const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "completed", label: "Completed" }];
+
 export default function ClassRoomsPage() {
     const { classRooms, loading, pagination, createClassRoom, updateClassRoom, deleteClassRoom } = useClassRooms();
     const { departments } = useDepartments();
@@ -84,10 +97,14 @@ export default function ClassRoomsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Classroom" : "Add Classroom"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Class Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Room Number*</Label><Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} required /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
+                            </div>
+                        ))}
                         <div>
-                            <Label>Department*</Label>
+                            <Label>Department *</Label>
                             <Select value={form.departmentId} onValueChange={v => f("departmentId", v)} required>
                                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                                 <SelectContent>
@@ -100,7 +117,7 @@ export default function ClassRoomsPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label>Course*</Label>
+                            <Label>Course *</Label>
                             <Select value={form.courseId} onValueChange={v => f("courseId", v)} required>
                                 <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
                                 <SelectContent>
@@ -112,18 +129,17 @@ export default function ClassRoomsPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div><Label>Capacity*</Label><Input type="number" value={form.capacity} onChange={e => f("capacity", e.target.value)} required /></div>
-                        <div><Label>Academic Year*</Label><Input value={form.academicYear} placeholder="2024-2025" onChange={e => f("academicYear", e.target.value)} required /></div>
-                        <div><Label>Semester*</Label><Input value={form.semester} placeholder="Spring" onChange={e => f("semester", e.target.value)} required /></div>
+                        {detailFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
+                            </div>
+                        ))}
                         <div>
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                </SelectContent>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                     </div>

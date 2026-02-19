@@ -19,6 +19,13 @@ import { toast } from "@/lib/toast";
 type TF = { name: string; code: string; description: string; headOfDepartment: string; status: string };
 const blank: TF = { name: "", code: "", description: "", headOfDepartment: "", status: "active" };
 
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "name", label: "Name", type: "text", required: true },
+    { key: "code", label: "Code", type: "text", required: true },
+];
+
+const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }];
+
 export default function DepartmentsPage() {
     const { departments, loading, createDepartment, updateDepartment, deleteDepartment } = useDepartments();
     const { teachers } = useTeachers();
@@ -78,8 +85,12 @@ export default function DepartmentsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Department" : "Add Department"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Code*</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div>
                             <Label>Head of Department</Label>
@@ -97,11 +108,8 @@ export default function DepartmentsPage() {
                         <div>
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                </SelectContent>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                     </div>

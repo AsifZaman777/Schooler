@@ -10,15 +10,47 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployees } from "@/hooks/useEmployees";
 import { Employee } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
-type TF = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; position: string; department: string; joiningDate: string; salary: string; status: string };
-const blank: TF = { firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", position: "", department: "", joiningDate: "", salary: "", status: "active" };
+type TF = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; street: string; city: string; state: string; zipCode: string; country: string; position: string; department: string; joiningDate: string; salary: string; status: string; emergencyName: string; emergencyRelationship: string; emergencyPhone: string };
+const blank: TF = { firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", street: "", city: "", state: "", zipCode: "", country: "", position: "", department: "", joiningDate: "", salary: "", status: "active", emergencyName: "", emergencyRelationship: "", emergencyPhone: "" };
+
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "firstName", label: "First Name", type: "text", required: true },
+    { key: "lastName", label: "Last Name", type: "text", required: true },
+    { key: "email", label: "Email", type: "email", required: true },
+    { key: "phone", label: "Phone", type: "text", required: true },
+    { key: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
+];
+
+const addressFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "street", label: "Street", type: "text", required: true },
+    { key: "city", label: "City", type: "text", required: true },
+    { key: "state", label: "State", type: "text", required: true },
+    { key: "zipCode", label: "Zip Code", type: "text", required: true },
+    { key: "country", label: "Country", type: "text", required: true },
+];
+
+const employmentFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "position", label: "Position", type: "text", required: true },
+    { key: "department", label: "Department", type: "text", required: true },
+    { key: "joiningDate", label: "Joining Date", type: "date", required: false },
+    { key: "salary", label: "Salary", type: "number", required: true },
+];
+
+const emergencyFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+    { key: "emergencyName", label: "Name", type: "text", required: true },
+    { key: "emergencyRelationship", label: "Relationship", type: "text", required: true },
+    { key: "emergencyPhone", label: "Phone", type: "text", required: true },
+];
+
+const genderOptions = [{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }];
+const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "on-leave", label: "On Leave" }];
 
 export default function EmployeesPage() {
     const { employees, loading, pagination, createEmployee, updateEmployee, deleteEmployee } = useEmployees();
@@ -32,18 +64,30 @@ export default function EmployeesPage() {
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(emp: Employee) {
         setEditing(emp);
+        const addr = emp.address as { street?: string; city?: string; state?: string; zipCode?: string; country?: string } | undefined;
+        const ec = emp.emergencyContact as { name?: string; relationship?: string; phone?: string } | undefined;
         setForm({
             firstName: emp.firstName, lastName: emp.lastName, email: emp.email, phone: emp.phone,
             dateOfBirth: emp.dateOfBirth?.slice(0, 10) ?? "", gender: emp.gender,
+            street: addr?.street ?? "", city: addr?.city ?? "", state: addr?.state ?? "",
+            zipCode: addr?.zipCode ?? "", country: addr?.country ?? "",
             position: emp.position, department: String(emp.department),
-            joiningDate: emp.joiningDate?.slice(0, 10) ?? "", salary: String(emp.salary ?? ""), status: emp.status
+            joiningDate: emp.joiningDate?.slice(0, 10) ?? "", salary: String(emp.salary ?? ""), status: emp.status,
+            emergencyName: ec?.name ?? "", emergencyRelationship: ec?.relationship ?? "", emergencyPhone: ec?.phone ?? ""
         });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, salary: Number(form.salary) };
+            const payload = {
+                firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
+                dateOfBirth: form.dateOfBirth, gender: form.gender,
+                address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
+                position: form.position, department: form.department, joiningDate: form.joiningDate,
+                salary: Number(form.salary), status: form.status,
+                emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
+            };
             if (editing) { await updateEmployee(editing._id, payload); toast.success("Employee updated"); }
             else { await createEmployee(payload); toast.success("Employee added"); }
             setOpen(false);
@@ -83,17 +127,53 @@ export default function EmployeesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Employee" : "Add Employee"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>First Name</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
-                        <div><Label>Last Name</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
-                        <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
-                        <div><Label>Phone</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} /></div>
-                        <div><Label>Date of Birth</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} /></div>
-                        <div><Label>Gender</Label><Select value={form.gender} onChange={e => f("gender", e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]} /></div>
-                        <div><Label>Position</Label><Input value={form.position} onChange={e => f("position", e.target.value)} required /></div>
-                        <div><Label>Department</Label><Input value={form.department} onChange={e => f("department", e.target.value)} /></div>
-                        <div><Label>Joining Date</Label><Input type="date" value={form.joiningDate} onChange={e => f("joiningDate", e.target.value)} /></div>
-                        <div><Label>Salary</Label><Input type="number" value={form.salary} onChange={e => f("salary", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "on-leave", label: "On Leave" }]} /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Gender *</Label>
+                            <Select value={form.gender} onValueChange={v => f("gender", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{genderOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="col-span-2 pt-2"><Label className="font-semibold">Address</Label></div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {addressFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="col-span-2 pt-2"><Label className="font-semibold">Employment Details</Label></div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {employmentFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status *</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="col-span-2 pt-2"><Label className="font-semibold">Emergency Contact</Label></div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {emergencyFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                            </div>
+                        ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
