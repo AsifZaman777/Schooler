@@ -11,5 +11,6 @@ export function useAuth() {
     isLoading: status === "loading",
     accessToken: session?.user?.accessToken,
     role: session?.user?.role,
+    referenceId: session?.user?.referenceId,
   };
 }

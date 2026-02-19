@@ -37,6 +37,7 @@ export const authOptions: NextAuthOptions = {
             id: data.data.user.id,
             email: data.data.user.email,
             role: data.data.user.role,
+            referenceId: data.data.user.referenceId,
             name: `${data.data.user.profile.firstName} ${data.data.user.profile.lastName}`,
             image: data.data.user.profile.profileImage,
             accessToken: data.data.token,
@@ -53,6 +54,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.referenceId = user.referenceId;
         token.accessToken = user.accessToken;
         token.profile = user.profile;
       }
@@ -62,6 +64,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.referenceId = token.referenceId as string;
         session.user.accessToken = token.accessToken as string;
         session.user.profile = token.profile as any;
       }

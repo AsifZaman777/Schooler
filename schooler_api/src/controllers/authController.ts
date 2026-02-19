@@ -87,6 +87,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        referenceId: user.referenceId,
         profile: {
           firstName: userData.firstName,
           lastName: userData.lastName,
