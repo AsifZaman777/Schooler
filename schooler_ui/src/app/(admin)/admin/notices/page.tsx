@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNotices } from "@/hooks/useNotices";
+import { useAuth } from "@/hooks/useAuth";
 import { Notice } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -26,8 +27,9 @@ type TF = {
     expiryDate: string;
     priority: "low" | "medium" | "high";
     status: "draft" | "published" | "archived";
+    createdBy: string;
 };
-const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft" };
+const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft", createdBy: "" };
 
 const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
     { key: "publishDate", label: "Publish Date", type: "date", required: false },
@@ -41,6 +43,7 @@ const targetAudienceOptions = [{ value: "all", label: "All" }, { value: "student
 
 export default function NoticesPage() {
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } = useNotices();
+    const { referenceId } = useAuth();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Notice | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -60,14 +63,19 @@ export default function NoticesPage() {
         });
     };
 
-    function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
+    function openAdd() {
+        setEditing(null);
+        setForm({ ...blank, createdBy: referenceId || "" });
+        setOpen(true);
+    }
     function openEdit(n: Notice) {
         setEditing(n);
         setForm({
             title: n.title, content: n.content, category: n.category,
             targetAudience: Array.isArray(n.targetAudience) ? n.targetAudience : [n.targetAudience as "student" | "parent" | "teacher" | "employee" | "all"],
             publishDate: n.publishDate?.slice(0, 10) ?? "", expiryDate: n.expiryDate?.slice(0, 10) ?? "",
-            priority: n.priority, status: n.status
+            priority: n.priority, status: n.status,
+            createdBy: typeof n.createdBy === 'string' ? n.createdBy : (n.createdBy?._id || referenceId || "") //hiddenly submit the created by
         });
         setOpen(true);
     }
