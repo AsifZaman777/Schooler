@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { ClassRoom, Pagination } from "@/types";
+import type { ClassRoom, Pagination } from "@/types/viewModels";
 
 export function useClassRooms(initialParams = {}) {
   const [classRooms, setClassRooms] = useState<ClassRoom[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Department, Pagination } from "@/types";
+import type { Department, Pagination } from "@/types/viewModels";
 
 export function useDepartments(initialParams = {}) {
   const [departments, setDepartments] = useState<Department[]>([]);

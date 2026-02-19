@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
 import { useAttendance } from "@/hooks/useAttendance";
-import { Attendance } from "@/types";
+import { Attendance } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 import { PlusCircle } from "lucide-react";
 

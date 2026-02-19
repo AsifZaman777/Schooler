@@ -9,15 +9,25 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNotices } from "@/hooks/useNotices";
-import { Notice } from "@/types";
+import { Notice } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
-type TF = { title: string; content: string; category: string; targetAudience: string; publishDate: string; expiryDate: string; priority: string; status: string };
-const blank: TF = { title: "", content: "", category: "general", targetAudience: "all", publishDate: "", expiryDate: "", priority: "medium", status: "draft" };
+type TF = {
+    title: string;
+    content: string;
+    category: "general" | "academic" | "exam" | "event" | "holiday" | "urgent";
+    targetAudience: ("student" | "parent" | "teacher" | "employee" | "all")[];
+    publishDate: string;
+    expiryDate: string;
+    priority: "low" | "medium" | "high";
+    status: "draft" | "published" | "archived";
+};
+const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft" };
 
 const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
     { key: "publishDate", label: "Publish Date", type: "date", required: false },
@@ -27,6 +37,7 @@ const dateFields: { key: keyof TF; label: string; type: string; required: boolea
 const categoryOptions = [{ value: "general", label: "General" }, { value: "academic", label: "Academic" }, { value: "exam", label: "Exam" }, { value: "event", label: "Event" }, { value: "holiday", label: "Holiday" }, { value: "urgent", label: "Urgent" }];
 const priorityOptions = [{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }];
 const statusOptions = [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }, { value: "archived", label: "Archived" }];
+const targetAudienceOptions = [{ value: "all", label: "All" }, { value: "student", label: "Students" }, { value: "parent", label: "Parents" }, { value: "teacher", label: "Teachers" }, { value: "employee", label: "Employees" }];
 
 export default function NoticesPage() {
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } = useNotices();
@@ -37,12 +48,24 @@ export default function NoticesPage() {
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
 
+    const toggleAudience = (value: "student" | "parent" | "teacher" | "employee" | "all") => {
+        setForm(p => {
+            const current = p.targetAudience;
+            if (current.includes(value)) {
+                const filtered = current.filter(v => v !== value);
+                return { ...p, targetAudience: filtered.length > 0 ? filtered : current };
+            } else {
+                return { ...p, targetAudience: [...current, value] as typeof p.targetAudience };
+            }
+        });
+    };
+
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(n: Notice) {
         setEditing(n);
         setForm({
             title: n.title, content: n.content, category: n.category,
-            targetAudience: (Array.isArray(n.targetAudience) ? n.targetAudience.join(",") : String(n.targetAudience)),
+            targetAudience: Array.isArray(n.targetAudience) ? n.targetAudience : [n.targetAudience as "student" | "parent" | "teacher" | "employee" | "all"],
             publishDate: n.publishDate?.slice(0, 10) ?? "", expiryDate: n.expiryDate?.slice(0, 10) ?? "",
             priority: n.priority, status: n.status
         });
@@ -51,7 +74,7 @@ export default function NoticesPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, targetAudience: form.targetAudience.split(",").map(s => s.trim()) };
+            const payload = { ...form };
             if (editing) { await updateNotice(editing._id, payload); toast.success("Notice updated"); }
             else { await createNotice(payload); toast.success("Notice published"); }
             setOpen(false);
@@ -102,7 +125,23 @@ export default function NoticesPage() {
                                 <SelectContent>{priorityOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
-                        <div><Label>Target Audience (comma-separated)</Label><Input value={form.targetAudience} onChange={e => f("targetAudience", e.target.value)} placeholder="all, students, teachers" /></div>
+                        <div className="col-span-2">
+                            <Label>Target Audience *</Label>
+                            <div className="flex flex-wrap gap-4 mt-2">
+                                {targetAudienceOptions.map(opt => (
+                                    <div key={opt.value} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`audience-${opt.value}`}
+                                            checked={form.targetAudience.includes(opt.value as "student" | "parent" | "teacher" | "employee" | "all")}
+                                            onCheckedChange={() => toggleAudience(opt.value as "student" | "parent" | "teacher" | "employee" | "all")}
+                                        />
+                                        <label htmlFor={`audience-${opt.value}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                                            {opt.label}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                         <div>
                             <Label>Status</Label>
                             <Select value={form.status} onValueChange={v => f("status", v)}>
@@ -116,7 +155,7 @@ export default function NoticesPage() {
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
                             </div>
                         ))}
-                        <div className="col-span-2"><Label>Content *</Label><textarea className="flex min-h-[80px] w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
+                        <div className="col-span-2"><Label>Content *</Label><textarea className="flex min-h-20 w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

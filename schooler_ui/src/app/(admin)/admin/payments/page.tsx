@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePayments } from "@/hooks/usePayments";
-import { Payment } from "@/types";
+import { Payment } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -63,7 +63,11 @@ export default function PaymentsPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, amount: Number(form.amount) };
+            const payload = {
+                ...form,
+                amount: Number(form.amount),
+                paymentType: form.paymentType as "tuition" | "exam" | "library" | "transport" | "hostel" | "other", paymentMethod: form.paymentMethod as "cash" | "card" | "bank-transfer" | "online", status: form.status as "pending" | "paid" | "overdue" | "cancelled"
+            };
             if (editing) { await updatePayment(editing._id, payload); toast.success("Payment updated"); }
             else { await createPayment(payload); toast.success("Payment added"); }
             setOpen(false);

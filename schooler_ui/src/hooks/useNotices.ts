@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Notice, Pagination } from "@/types";
+import type { Notice, Pagination } from "@/types/viewModels";
 
 export function useNotices(initialParams = {}) {
   const [notices, setNotices] = useState<Notice[]>([]);

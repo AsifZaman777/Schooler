@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Attendance, Pagination } from "@/types";
+import type { Attendance, Pagination } from "@/types/viewModels";
 
 export function useAttendance(initialParams = {}) {
   const [attendances, setAttendances] = useState<Attendance[]>([]);

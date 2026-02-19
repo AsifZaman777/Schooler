@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeachers } from "@/hooks/useTeachers";
-import { Department, Teacher } from "@/types";
+import { Department, Teacher } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -65,7 +65,7 @@ export default function DepartmentsPage() {
     const columns: ColumnDef<Department, unknown>[] = [
         { id: "name", accessorKey: "name", header: "Name" },
         { id: "code", accessorKey: "code", header: "Code" },
-        { id: "head", header: "Head", accessorFn: r => (r.headOfDepartment as { firstName?: string; lastName?: string })?.firstName ? `${(r.headOfDepartment as { firstName: string; lastName: string }).firstName} ${(r.headOfDepartment as { firstName: string; lastName: string }).lastName}` : "—" },
+        { id: "head", header: "Head", accessorFn: r => { const h = r.headOfDepartment; return (typeof h === "object" && h !== null && 'firstName' in h) ? `${(h as any).firstName} ${(h as any).lastName}` : "—"; } },
         { id: "description", accessorKey: "description", header: "Description" },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },

@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useAttendance } from "@/hooks/useAttendance";
-import { Attendance } from "@/types";
+import { Attendance } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 
 export default function ParentAttendancePage() {

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStudents } from "@/hooks/useStudents";
 import { useParents } from "@/hooks/useParents";
 import { useClassRooms } from "@/hooks/useClassRooms";
-import { Student, Parent, ClassRoom } from "@/types";
+import { Student, Parent, ClassRoom } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/lib/toast";

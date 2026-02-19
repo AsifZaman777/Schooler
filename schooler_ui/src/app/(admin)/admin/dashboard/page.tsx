@@ -7,7 +7,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { GraduationCap, UserCheck, Briefcase, Clock, TrendingUp } from "lucide-react";
-import type { DashboardStats } from "@/types";
+import type { DashboardStats } from "@/types/viewModels";
 
 const PIE_COLORS = ["#3b6ef8", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExams } from "@/hooks/useExams";
-import { Exam } from "@/types";
+import { Exam } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -64,7 +64,13 @@ export default function ExamsPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, totalMarks: Number(form.totalMarks), passingMarks: Number(form.passingMarks) };
+            const payload = {
+                ...form,
+                totalMarks: Number(form.totalMarks),
+                passingMarks: Number(form.passingMarks),
+                examType: form.examType as "midterm" | "final" | "quiz" | "assignment" | "practical",
+                status: form.status as "scheduled" | "ongoing" | "completed" | "cancelled"
+            };
             if (editing) { await updateExam(editing._id, payload); toast.success("Exam updated"); }
             else { await createExam(payload); toast.success("Exam added"); }
             setOpen(false);
@@ -143,11 +149,8 @@ export default function ExamsPage() {
                     </div>
                 </form>
             </FormDialog>
-        </div >
-                </form >
-            </FormDialog >
-        <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-            message={`Delete exam "${confirm?.name}"? This cannot be undone.`} />
+            <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
+                message={`Delete exam "${confirm?.name}"? This cannot be undone.`} />
         </>
     );
 }

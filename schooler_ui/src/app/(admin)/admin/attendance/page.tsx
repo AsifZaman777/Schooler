@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAttendance } from "@/hooks/useAttendance";
-import { Attendance } from "@/types";
+import { Attendance } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -49,8 +49,9 @@ export default function AttendancePage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            if (editing) { await updateAttendance(editing._id, form); toast.success("Record updated"); }
-            else { await createAttendance(form); toast.success("Record added"); }
+            const payload = { ...form, status: form.status as "present" | "absent" | "late" | "excused" };
+            if (editing) { await updateAttendance(editing._id, payload); toast.success("Record updated"); }
+            else { await createAttendance(payload); toast.success("Record added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }

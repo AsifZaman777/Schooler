@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployees } from "@/hooks/useEmployees";
-import { Employee } from "@/types";
+import { Employee } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -82,10 +82,10 @@ export default function EmployeesPage() {
         try {
             const payload = {
                 firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
-                dateOfBirth: form.dateOfBirth, gender: form.gender,
+                dateOfBirth: form.dateOfBirth, gender: form.gender as "male" | "female" | "other",
                 address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
                 position: form.position, department: form.department, joiningDate: form.joiningDate,
-                salary: Number(form.salary), status: form.status,
+                salary: Number(form.salary), status: form.status as "active" | "inactive" | "on-leave",
                 emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
             };
             if (editing) { await updateEmployee(editing._id, payload); toast.success("Employee updated"); }
@@ -102,7 +102,7 @@ export default function EmployeesPage() {
     const columns: ColumnDef<Employee, unknown>[] = [
         {
             id: "name", header: "Employee", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "position", accessorKey: "position", header: "Position" },

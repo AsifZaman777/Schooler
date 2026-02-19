@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Course, Pagination } from "@/types";
+import type { Course, Pagination } from "@/types/viewModels";
 
 export function useCourses(initialParams = {}) {
   const [courses, setCourses] = useState<Course[]>([]);

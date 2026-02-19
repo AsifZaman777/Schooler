@@ -119,7 +119,7 @@ export interface Department {
   name: string;
   code: string;
   description?: string;
-  headOfDepartment?: string;
+  headOfDepartment?: string | Teacher;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -173,7 +173,14 @@ export interface Routine {
   _id: string;
   classRoomId: string | ClassRoom;
   teacherId: string | Teacher;
-  dayOfWeek: string;
+  dayOfWeek:
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+    | "sunday";
   startTime: string;
   endTime: string;
   subject: string;
@@ -228,7 +235,7 @@ export interface Payment {
     | "transport"
     | "hostel"
     | "other";
-  paymentMethod?: "cash" | "card" | "bank-transfer" | "online";
+  paymentMethod: "cash" | "card" | "bank-transfer" | "online";
   transactionId?: string;
   dueDate: string;
   paidDate?: string;
@@ -251,7 +258,7 @@ export interface Expense {
   paymentMethod: "cash" | "card" | "bank-transfer" | "cheque";
   transactionId?: string;
   employeeId?: string | Employee;
-  approvedBy?: string;
+  approvedBy?: string | Employee;
   status: "pending" | "approved" | "paid" | "rejected";
   attachments?: string[];
   remarks?: string;
@@ -265,11 +272,11 @@ export interface Notice {
   title: string;
   content: string;
   category: "general" | "academic" | "exam" | "event" | "holiday" | "urgent";
-  targetAudience: string[];
-  publishDate?: string;
+  targetAudience: ("student" | "parent" | "teacher" | "employee" | "all")[];
+  publishDate: string;
   expiryDate?: string;
   attachments?: string[];
-  createdBy: string;
+  createdBy: string | Employee;
   status: "draft" | "published" | "archived";
   priority: "low" | "medium" | "high";
   createdAt: string;

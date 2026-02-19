@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useExams } from "@/hooks/useExams";
-import { Exam } from "@/types";
+import { Exam } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 
 export default function TeacherExamsPage() {

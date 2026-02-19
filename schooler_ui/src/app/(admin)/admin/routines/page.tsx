@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRoutines } from "@/hooks/useRoutines";
-import { Routine } from "@/types";
+import { Routine } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -57,8 +57,9 @@ export default function RoutinesPage() {
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            if (editing) { await updateRoutine(editing._id, form); toast.success("Routine updated"); }
-            else { await createRoutine(form); toast.success("Routine added"); }
+            const payload = { ...form, status: form.status as "active" | "cancelled" | "rescheduled" };
+            if (editing) { await updateRoutine(editing._id, payload); toast.success("Routine updated"); }
+            else { await createRoutine(payload); toast.success("Routine added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }

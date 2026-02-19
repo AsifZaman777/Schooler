@@ -1,6 +1,6 @@
 "use client";
 import { useApi } from "@/hooks/useApi";
-import type { DashboardStats } from "@/types";
+import type { DashboardStats } from "@/types/viewModels";
 
 export function useDashboard() {
   const stats = useApi<DashboardStats>("/dashboard/stats");

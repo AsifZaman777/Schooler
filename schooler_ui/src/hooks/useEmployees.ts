@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Employee, Pagination } from "@/types";
+import type { Employee, Pagination } from "@/types/viewModels";
 
 export function useEmployees(initialParams = {}) {
   const [employees, setEmployees] = useState<Employee[]>([]);

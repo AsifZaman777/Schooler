@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useClassRooms } from "@/hooks/useClassRooms";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useCourses } from "@/hooks/useCourses";
-import { ClassRoom, Department, Course } from "@/types";
+import { ClassRoom, Department, Course } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 

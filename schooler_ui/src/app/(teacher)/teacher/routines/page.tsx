@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useRoutines } from "@/hooks/useRoutines";
-import { Routine } from "@/types";
+import { Routine } from "@/types/viewModels";
 
 export default function TeacherRoutinesPage() {
     const { routines, loading } = useRoutines();

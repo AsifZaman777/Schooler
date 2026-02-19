@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/hooks/usePayments";
-import { Payment } from "@/types";
+import { Payment } from "@/types/viewModels";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 export default function ParentPaymentsPage() {

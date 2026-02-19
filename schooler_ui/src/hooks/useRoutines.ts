@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Routine, Pagination } from "@/types";
+import type { Routine, Pagination } from "@/types/viewModels";
 
 export function useRoutines(initialParams = {}) {
   const [routines, setRoutines] = useState<Routine[]>([]);

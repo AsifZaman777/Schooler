@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useDepartments } from "@/hooks/useDepartments";
-import { Teacher, Department } from "@/types";
+import { Teacher, Department } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -128,7 +128,7 @@ export default function TeachersPage() {
     const columns: ColumnDef<Teacher, unknown>[] = [
         {
             id: "name", header: "Teacher", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "qualification", accessorKey: "qualification", header: "Qualification" },
