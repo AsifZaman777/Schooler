@@ -9,17 +9,21 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClassRooms } from "@/hooks/useClassRooms";
-import { ClassRoom } from "@/types";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useCourses } from "@/hooks/useCourses";
+import { ClassRoom, Department, Course } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-type TF = { name: string; roomNumber: string; capacity: string; academicYear: string; semester: string; status: string };
-const blank: TF = { name: "", roomNumber: "", capacity: "", academicYear: "", semester: "", status: "active" };
+type TF = { name: string; roomNumber: string; departmentId: string; courseId: string; capacity: string; academicYear: string; semester: string; status: string };
+const blank: TF = { name: "", roomNumber: "", departmentId: "", courseId: "", capacity: "", academicYear: "", semester: "", status: "active" };
 
 export default function ClassRoomsPage() {
     const { classRooms, loading, pagination, createClassRoom, updateClassRoom, deleteClassRoom } = useClassRooms();
+    const { departments } = useDepartments();
+    const { courses } = useCourses();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<ClassRoom | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -30,13 +34,18 @@ export default function ClassRoomsPage() {
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(c: ClassRoom) {
         setEditing(c);
-        setForm({ name: c.name, roomNumber: c.roomNumber, capacity: String(c.capacity), academicYear: c.academicYear, semester: c.semester, status: c.status });
+        setForm({
+            name: c.name, roomNumber: c.roomNumber,
+            departmentId: typeof c.departmentId === 'string' ? c.departmentId : (c.departmentId as any)?._id ?? "",
+            courseId: typeof c.courseId === 'string' ? c.courseId : (c.courseId as any)?._id ?? "",
+            capacity: String(c.capacity), academicYear: c.academicYear, semester: c.semester, status: c.status
+        });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, capacity: Number(form.capacity) };
+            const payload: any = { ...form, capacity: Number(form.capacity), currentEnrollment: 0 };
             if (editing) { await updateClassRoom(editing._id, payload); toast.success("Classroom updated"); }
             else { await createClassRoom(payload); toast.success("Classroom added"); }
             setOpen(false);
@@ -75,12 +84,48 @@ export default function ClassRoomsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Classroom" : "Add Classroom"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Class Name</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Room Number</Label><Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} /></div>
-                        <div><Label>Capacity</Label><Input type="number" value={form.capacity} onChange={e => f("capacity", e.target.value)} /></div>
-                        <div><Label>Academic Year</Label><Input value={form.academicYear} placeholder="2024-25" onChange={e => f("academicYear", e.target.value)} /></div>
-                        <div><Label>Semester</Label><Input value={form.semester} placeholder="Spring" onChange={e => f("semester", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "completed", label: "Completed" }]} /></div>
+                        <div><Label>Class Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
+                        <div><Label>Room Number*</Label><Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} required /></div>
+                        <div>
+                            <Label>Department*</Label>
+                            <Select value={form.departmentId} onValueChange={v => f("departmentId", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                                <SelectContent>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept._id} value={dept._id}>
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Course*</Label>
+                            <Select value={form.courseId} onValueChange={v => f("courseId", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+                                <SelectContent>
+                                    {courses.map(course => (
+                                        <SelectItem key={course._id} value={course._id}>
+                                            {course.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div><Label>Capacity*</Label><Input type="number" value={form.capacity} onChange={e => f("capacity", e.target.value)} required /></div>
+                        <div><Label>Academic Year*</Label><Input value={form.academicYear} placeholder="2024-2025" onChange={e => f("academicYear", e.target.value)} required /></div>
+                        <div><Label>Semester*</Label><Input value={form.semester} placeholder="Spring" onChange={e => f("semester", e.target.value)} required /></div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

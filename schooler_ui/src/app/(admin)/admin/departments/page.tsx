@@ -9,17 +9,19 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDepartments } from "@/hooks/useDepartments";
-import { Department } from "@/types";
+import { useTeachers } from "@/hooks/useTeachers";
+import { Department, Teacher } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-type TF = { name: string; code: string; description: string; status: string };
-const blank: TF = { name: "", code: "", description: "", status: "active" };
+type TF = { name: string; code: string; description: string; headOfDepartment: string; status: string };
+const blank: TF = { name: "", code: "", description: "", headOfDepartment: "", status: "active" };
 
 export default function DepartmentsPage() {
     const { departments, loading, createDepartment, updateDepartment, deleteDepartment } = useDepartments();
+    const { teachers } = useTeachers();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Department | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -30,14 +32,20 @@ export default function DepartmentsPage() {
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(d: Department) {
         setEditing(d);
-        setForm({ name: d.name, code: d.code, description: d.description ?? "", status: d.status });
+        setForm({
+            name: d.name, code: d.code, description: d.description ?? "",
+            headOfDepartment: typeof d.headOfDepartment === 'string' ? d.headOfDepartment : (d.headOfDepartment as any)?._id ?? "",
+            status: d.status
+        });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            if (editing) { await updateDepartment(editing._id, form); toast.success("Department updated"); }
-            else { await createDepartment(form); toast.success("Department added"); }
+            const payload: any = { ...form };
+            if (!payload.headOfDepartment) delete payload.headOfDepartment;
+            if (editing) { await updateDepartment(editing._id, payload); toast.success("Department updated"); }
+            else { await createDepartment(payload); toast.success("Department added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }
@@ -70,10 +78,32 @@ export default function DepartmentsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Department" : "Add Department"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Name</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Code</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
+                        <div><Label>Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
+                        <div><Label>Code*</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} /></div>
+                        <div>
+                            <Label>Head of Department</Label>
+                            <Select value={form.headOfDepartment} onValueChange={v => f("headOfDepartment", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
+                                <SelectContent>
+                                    {teachers.map(teacher => (
+                                        <SelectItem key={teacher._id} value={teacher._id}>
+                                            {teacher.firstName} {teacher.lastName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

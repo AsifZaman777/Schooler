@@ -9,17 +9,19 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCourses } from "@/hooks/useCourses";
-import { Course } from "@/types";
+import { useDepartments } from "@/hooks/useDepartments";
+import { Course, Department } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-type TF = { name: string; code: string; description: string; credits: string; duration: string; status: string };
-const blank: TF = { name: "", code: "", description: "", credits: "", duration: "", status: "active" };
+type TF = { name: string; code: string; description: string; departmentId: string; credits: string; duration: string; status: string };
+const blank: TF = { name: "", code: "", description: "", departmentId: "", credits: "", duration: "", status: "active" };
 
 export default function CoursesPage() {
     const { courses, loading, pagination, createCourse, updateCourse, deleteCourse } = useCourses();
+    const { departments } = useDepartments();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Course | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -30,13 +32,17 @@ export default function CoursesPage() {
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(c: Course) {
         setEditing(c);
-        setForm({ name: c.name, code: c.code, description: c.description ?? "", credits: String(c.credits ?? ""), duration: String(c.duration ?? ""), status: c.status });
+        setForm({
+            name: c.name, code: c.code, description: c.description ?? "",
+            departmentId: typeof c.departmentId === 'string' ? c.departmentId : (c.departmentId as any)?._id ?? "",
+            credits: String(c.credits ?? ""), duration: String(c.duration ?? ""), status: c.status
+        });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = { ...form, credits: Number(form.credits), duration: Number(form.duration) };
+            const payload: any = { ...form, credits: Number(form.credits), duration: Number(form.duration) };
             if (editing) { await updateCourse(editing._id, payload); toast.success("Course updated"); }
             else { await createCourse(payload); toast.success("Course added"); }
             setOpen(false);
@@ -72,12 +78,34 @@ export default function CoursesPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Course" : "Add Course"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>Course Name</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
-                        <div><Label>Code</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
+                        <div><Label>Course Name*</Label><Input value={form.name} onChange={e => f("name", e.target.value)} required /></div>
+                        <div><Label>Code*</Label><Input value={form.code} onChange={e => f("code", e.target.value)} required /></div>
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
-                        <div><Label>Credits</Label><Input type="number" value={form.credits} onChange={e => f("credits", e.target.value)} /></div>
-                        <div><Label>Duration (months)</Label><Input type="number" value={form.duration} onChange={e => f("duration", e.target.value)} /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} /></div>
+                        <div>
+                            <Label>Department*</Label>
+                            <Select value={form.departmentId} onValueChange={v => f("departmentId", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                                <SelectContent>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept._id} value={dept._id}>
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div><Label>Credits*</Label><Input type="number" value={form.credits} onChange={e => f("credits", e.target.value)} required /></div>
+                        <div><Label>Duration (months)*</Label><Input type="number" value={form.duration} onChange={e => f("duration", e.target.value)} required /></div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

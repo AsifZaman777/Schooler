@@ -1,18 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStudents } from "@/hooks/useStudents";
-import { Student } from "@/types";
+import { useParents } from "@/hooks/useParents";
+import { useClassRooms } from "@/hooks/useClassRooms";
+import { Student, Parent, ClassRoom } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/lib/toast";
@@ -21,21 +22,60 @@ type TF = {
     firstName: string; lastName: string; email: string; phone: string; gender: string; dateOfBirth: string; status: string;
     street: string; city: string; state: string; zipCode: string; country: string;
     emergencyName: string; emergencyRelationship: string; emergencyPhone: string;
+    parentId: string; classRoomId: string;
 };
 const blank: TF = {
     firstName: "", lastName: "", email: "", phone: "", gender: "male", dateOfBirth: "", status: "active",
     street: "", city: "", state: "", zipCode: "", country: "",
-    emergencyName: "", emergencyRelationship: "", emergencyPhone: ""
+    emergencyName: "", emergencyRelationship: "", emergencyPhone: "",
+    parentId: "", classRoomId: ""
 };
 
 export default function StudentsPage() {
     const { students, loading, pagination, createStudent, updateStudent, deleteStudent } = useStudents();
+    const { parents } = useParents();
+    const { classRooms } = useClassRooms();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Student | null>(null);
     const [form, setForm] = useState<TF>(blank);
     const [confirm, setConfirm] = useState<Student | null>(null);
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+    const basicFields = [
+        { key: "firstName" as keyof TF, label: "First Name", type: "text", required: true },
+        { key: "lastName" as keyof TF, label: "Last Name", type: "text", required: true },
+        { key: "email" as keyof TF, label: "Email", type: "email", required: true },
+        { key: "phone" as keyof TF, label: "Phone", type: "text", required: true },
+        { key: "dateOfBirth" as keyof TF, label: "Date of Birth", type: "date", required: true },
+    ];
+
+    const addressFields = [
+        { key: "street" as keyof TF, label: "Street", required: true },
+        { key: "city" as keyof TF, label: "City", required: true },
+        { key: "state" as keyof TF, label: "State", required: true },
+        { key: "zipCode" as keyof TF, label: "Zip Code", required: true },
+        { key: "country" as keyof TF, label: "Country", required: true },
+    ];
+
+    const emergencyFields = [
+        { key: "emergencyName" as keyof TF, label: "Name", required: true },
+        { key: "emergencyRelationship" as keyof TF, label: "Relationship", required: true },
+        { key: "emergencyPhone" as keyof TF, label: "Phone", required: true },
+    ];
+
+    const genderOptions = [
+        { value: "male", label: "Male" },
+        { value: "female", label: "Female" },
+        { value: "other", label: "Other" },
+    ];
+
+    const statusOptions = [
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+        { value: "graduated", label: "Graduated" },
+        { value: "suspended", label: "Suspended" },
+    ];
 
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(s: Student) {
@@ -46,21 +86,25 @@ export default function StudentsPage() {
             street: s.address?.street ?? "", city: s.address?.city ?? "", state: s.address?.state ?? "",
             zipCode: s.address?.zipCode ?? "", country: s.address?.country ?? "",
             emergencyName: s.emergencyContact?.name ?? "", emergencyRelationship: s.emergencyContact?.relationship ?? "",
-            emergencyPhone: s.emergencyContact?.phone ?? ""
+            emergencyPhone: s.emergencyContact?.phone ?? "",
+            parentId: typeof s.parentId === 'string' ? s.parentId : (s.parentId as any)?._id ?? "",
+            classRoomId: typeof s.classRoomId === 'string' ? s.classRoomId : (s.classRoomId as any)?._id ?? ""
         });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = {
+            const payload: any = {
                 firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
-                gender: form.gender, dateOfBirth: form.dateOfBirth, status: form.status, enrollmentDate: new Date().toISOString(),
+                gender: form.gender, dateOfBirth: form.dateOfBirth, status: form.status, enrollmentDate: editing?.enrollmentDate ?? new Date().toISOString(),
                 address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
                 emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
             };
-            if (editing) { await updateStudent(editing._id, payload as any); toast.success("Student updated"); }
-            else { await createStudent(payload as any); toast.success("Student added"); }
+            if (form.parentId) payload.parentId = form.parentId;
+            if (form.classRoomId) payload.classRoomId = form.classRoomId;
+            if (editing) { await updateStudent(editing._id, payload); toast.success("Student updated"); }
+            else { await createStudent(payload); toast.success("Student added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }
@@ -73,9 +117,34 @@ export default function StudentsPage() {
     const columns: ColumnDef<Student, unknown>[] = [
         {
             id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size="sm" /><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
+        { id: "email", accessorKey: "email", header: "Email" },
         { id: "phone", accessorKey: "phone", header: "Phone" },
+        { id: "gender", accessorKey: "gender", header: "Gender", cell: ({ getValue }) => <span className="capitalize">{String(getValue())}</span> },
+        { id: "dob", header: "DOB", accessorFn: r => formatDate(r.dateOfBirth) },
+        {
+            id: "address", header: "Address",
+            accessorFn: r => r.address ? `${r.address.street}, ${r.address.city}, ${r.address.state} ${r.address.zipCode}` : "—",
+            cell: ({ row: { original: r } }) => r.address ? (
+                <div className="text-xs">
+                    <p>{r.address.street}</p>
+                    <p className="text-[--muted-foreground]">{r.address.city}, {r.address.state} {r.address.zipCode}</p>
+                    <p className="text-[--muted-foreground]">{r.address.country}</p>
+                </div>
+            ) : "—"
+        },
+        {
+            id: "emergency", header: "Emergency Contact",
+            accessorFn: r => r.emergencyContact ? `${r.emergencyContact.name} (${r.emergencyContact.relationship})` : "—",
+            cell: ({ row: { original: r } }) => r.emergencyContact ? (
+                <div className="text-xs">
+                    <p>{r.emergencyContact.name}</p>
+                    <p className="text-[--muted-foreground]">{r.emergencyContact.relationship}</p>
+                    <p className="text-[--muted-foreground]">{r.emergencyContact.phone}</p>
+                </div>
+            ) : "—"
+        },
         { id: "class", header: "Class", accessorFn: r => (r.classRoomId as { name?: string })?.name ?? "—" },
         {
             id: "parent", header: "Parent", accessorFn: r => {
@@ -84,7 +153,6 @@ export default function StudentsPage() {
             }
         },
         { id: "enrollmentDate", header: "Enrolled", accessorFn: r => formatDate(r.enrollmentDate) },
-        { id: "dob", header: "DOB", accessorFn: r => formatDate(r.dateOfBirth) },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
@@ -103,23 +171,94 @@ export default function StudentsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Student" : "Add Student"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                        <div><Label>First Name*</Label><Input value={form.firstName} onChange={e => f("firstName", e.target.value)} required /></div>
-                        <div><Label>Last Name*</Label><Input value={form.lastName} onChange={e => f("lastName", e.target.value)} required /></div>
-                        <div><Label>Email*</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
-                        <div><Label>Phone*</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} required /></div>
-                        <div><Label>Date of Birth*</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} required /></div>
-                        <div><Label>Gender*</Label><Select value={form.gender} onChange={e => f("gender", e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]} /></div>
-                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
-                        <div><Label>Street*</Label><Input value={form.street} onChange={e => f("street", e.target.value)} required /></div>
-                        <div><Label>City*</Label><Input value={form.city} onChange={e => f("city", e.target.value)} required /></div>
-                        <div><Label>State*</Label><Input value={form.state} onChange={e => f("state", e.target.value)} required /></div>
-                        <div><Label>Zip Code*</Label><Input value={form.zipCode} onChange={e => f("zipCode", e.target.value)} required /></div>
-                        <div><Label>Country*</Label><Input value={form.country} onChange={e => f("country", e.target.value)} required /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "graduated", label: "Graduated" }, { value: "suspended", label: "Suspended" }]} /></div>
-                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p></div>
-                        <div><Label>Name*</Label><Input value={form.emergencyName} onChange={e => f("emergencyName", e.target.value)} required /></div>
-                        <div><Label>Relationship*</Label><Input value={form.emergencyRelationship} onChange={e => f("emergencyRelationship", e.target.value)} required /></div>
-                        <div><Label>Phone*</Label><Input value={form.emergencyPhone} onChange={e => f("emergencyPhone", e.target.value)} required /></div>
+                        {basicFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    type={field.type}
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Gender*</Label>
+                            <Select value={form.gender} onValueChange={v => f("gender", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                                <SelectContent>
+                                    {genderOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="col-span-2">
+                            <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p>
+                        </div>
+                        {addressFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    {statusOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="col-span-2">
+                            <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Assignment</p>
+                        </div>
+                        <div>
+                            <Label>Parent</Label>
+                            <Select value={form.parentId} onValueChange={v => f("parentId", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select parent" /></SelectTrigger>
+                                <SelectContent>
+                                    {parents.map(parent => (
+                                        <SelectItem key={parent._id} value={parent._id}>
+                                            {parent.firstName} {parent.lastName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>ClassRoom</Label>
+                            <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select classroom" /></SelectTrigger>
+                                <SelectContent>
+                                    {classRooms.map(cls => (
+                                        <SelectItem key={cls._id} value={cls._id}>
+                                            {cls.name} - {cls.roomNumber}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="col-span-2">
+                            <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p>
+                        </div>
+                        {emergencyFields.map(field => (
+                            <div key={field.key}>
+                                <Label>{field.label}{field.required && "*"}</Label>
+                                <Input
+                                    value={form[field.key]}
+                                    onChange={e => f(field.key, e.target.value)}
+                                    required={field.required}
+                                />
+                            </div>
+                        ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>

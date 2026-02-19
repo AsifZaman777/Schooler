@@ -10,9 +10,10 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTeachers } from "@/hooks/useTeachers";
-import { Teacher } from "@/types";
+import { useDepartments } from "@/hooks/useDepartments";
+import { Teacher, Department } from "@/types";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -22,16 +23,19 @@ type TF = {
     qualification: string; specialization: string; experience: string; joiningDate: string; salary: string; status: string;
     street: string; city: string; state: string; zipCode: string; country: string;
     emergencyName: string; emergencyRelationship: string; emergencyPhone: string;
+    departmentId: string;
 };
 const blank: TF = {
     firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male",
     qualification: "", specialization: "", experience: "", joiningDate: "", salary: "", status: "active",
     street: "", city: "", state: "", zipCode: "", country: "",
-    emergencyName: "", emergencyRelationship: "", emergencyPhone: ""
+    emergencyName: "", emergencyRelationship: "", emergencyPhone: "",
+    departmentId: ""
 };
 
 export default function TeachersPage() {
     const { teachers, loading, pagination, createTeacher, updateTeacher, deleteTeacher } = useTeachers();
+    const { departments } = useDepartments();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Teacher | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -51,14 +55,15 @@ export default function TeachersPage() {
             street: t.address?.street ?? "", city: t.address?.city ?? "", state: t.address?.state ?? "",
             zipCode: t.address?.zipCode ?? "", country: t.address?.country ?? "",
             emergencyName: t.emergencyContact?.name ?? "", emergencyRelationship: t.emergencyContact?.relationship ?? "",
-            emergencyPhone: t.emergencyContact?.phone ?? ""
+            emergencyPhone: t.emergencyContact?.phone ?? "",
+            departmentId: typeof t.departmentId === 'string' ? t.departmentId : (t.departmentId as any)?._id ?? ""
         });
         setOpen(true);
     }
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); setBusy(true);
         try {
-            const payload = {
+            const payload: any = {
                 firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
                 dateOfBirth: form.dateOfBirth, gender: form.gender, qualification: form.qualification,
                 specialization: form.specialization.split(",").map(s => s.trim()).filter(Boolean),
@@ -66,8 +71,9 @@ export default function TeachersPage() {
                 address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
                 emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
             };
-            if (editing) { await updateTeacher(editing._id, payload as any); toast.success("Teacher updated"); }
-            else { await createTeacher(payload as any); toast.success("Teacher added"); }
+            if (form.departmentId) payload.departmentId = form.departmentId;
+            if (editing) { await updateTeacher(editing._id, payload); toast.success("Teacher updated"); }
+            else { await createTeacher(payload); toast.success("Teacher added"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
     }
@@ -111,13 +117,46 @@ export default function TeachersPage() {
                         <div><Label>Email*</Label><Input type="email" value={form.email} onChange={e => f("email", e.target.value)} required /></div>
                         <div><Label>Phone*</Label><Input value={form.phone} onChange={e => f("phone", e.target.value)} required /></div>
                         <div><Label>Date of Birth*</Label><Input type="date" value={form.dateOfBirth} onChange={e => f("dateOfBirth", e.target.value)} required /></div>
-                        <div><Label>Gender*</Label><Select value={form.gender} onChange={e => f("gender", e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]} /></div>
+                        <div>
+                            <Label>Gender*</Label>
+                            <Select value={form.gender} onValueChange={v => f("gender", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div><Label>Qualification*</Label><Input value={form.qualification} onChange={e => f("qualification", e.target.value)} required /></div>
                         <div><Label>Specialization (comma-separated)</Label><Input value={form.specialization} onChange={e => f("specialization", e.target.value)} placeholder="Math, Science" /></div>
                         <div><Label>Experience (years)*</Label><Input type="number" value={form.experience} onChange={e => f("experience", e.target.value)} required /></div>
                         <div><Label>Joining Date</Label><Input type="date" value={form.joiningDate} onChange={e => f("joiningDate", e.target.value)} /></div>
                         <div><Label>Salary*</Label><Input type="number" value={form.salary} onChange={e => f("salary", e.target.value)} required /></div>
-                        <div><Label>Status</Label><Select value={form.status} onChange={e => f("status", e.target.value)} options={[{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "on-leave", label: "On Leave" }]} /></div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                    <SelectItem value="on-leave">On Leave</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Department</Label>
+                            <Select value={form.departmentId} onValueChange={v => f("departmentId", v)}>
+                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                                <SelectContent>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept._id} value={dept._id}>
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
                         <div><Label>Street*</Label><Input value={form.street} onChange={e => f("street", e.target.value)} required /></div>
                         <div><Label>City*</Label><Input value={form.city} onChange={e => f("city", e.target.value)} required /></div>
