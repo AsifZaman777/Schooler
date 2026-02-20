@@ -87,10 +87,13 @@ export default function ParentsPage() {
 
     const columns: ColumnDef<Parent, unknown>[] = [
         {
+            id: "parentId", accessorKey: "parentId", header: "Parent ID",
+            cell: ({ getValue }) => <span className="font-mono text-xs bg-violet-50 text-violet-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
+        },
+        {
             id: "name", header: "Parent", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
-        { id: "refId", accessorKey: "_id", header: "Parent Ref ID", cell: ({ getValue }) => <span className="text-xs font-mono text-[--muted-foreground]">{String(getValue())}</span> },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "relationship", accessorKey: "relationship", header: "Relationship" },
         { id: "occupation", accessorKey: "occupation", header: "Occupation" },

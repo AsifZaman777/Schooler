@@ -116,6 +116,10 @@ export default function StudentsPage() {
 
     const columns: ColumnDef<Student, unknown>[] = [
         {
+            id: "studentId", accessorKey: "studentId", header: "Student ID",
+            cell: ({ getValue }) => <span className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
+        },
+        {
             id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
@@ -227,7 +231,7 @@ export default function StudentsPage() {
                                 <SelectContent>
                                     {parents.map(parent => (
                                         <SelectItem key={parent._id} value={parent._id}>
-                                            {parent.firstName} {parent.lastName}
+                                            {parent.parentId ? <span className="font-mono text-xs text-blue-600 mr-1">{parent.parentId}</span> : null}{parent.firstName} {parent.lastName}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

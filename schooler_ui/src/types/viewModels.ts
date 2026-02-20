@@ -32,6 +32,7 @@ export interface ApiResponse<T> {
 // ─── Student ─────────────────────────────────────────────────────────────────
 export interface Student {
   _id: string;
+  studentId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -57,6 +58,7 @@ export interface Student {
 // ─── Parent ──────────────────────────────────────────────────────────────────
 export interface Parent {
   _id: string;
+  parentId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -72,6 +74,7 @@ export interface Parent {
 // ─── Teacher ─────────────────────────────────────────────────────────────────
 export interface Teacher {
   _id: string;
+  teacherId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -95,6 +98,7 @@ export interface Teacher {
 // ─── Employee ────────────────────────────────────────────────────────────────
 export interface Employee {
   _id: string;
+  employeeId?: string;
   firstName: string;
   lastName: string;
   email: string;

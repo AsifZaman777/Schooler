@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Student } from "../models/Student";
+import { nextSequence } from "../models/Counter";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
 import {
@@ -9,7 +10,9 @@ import {
 
 export const createStudent = asyncHandler(
   async (req: Request, res: Response) => {
-    const student = await Student.create(req.body);
+    const seq = await nextSequence("student");
+    const studentId = `STU-${String(seq).padStart(4, "0")}`;
+    const student = await Student.create({ ...req.body, studentId });
 
     res.status(201).json({
       success: true,
@@ -29,6 +32,7 @@ export const getAllStudents = asyncHandler(
     if (classRoomId) filter.classRoomId = classRoomId;
     if (search) {
       filter.$or = [
+        { studentId: { $regex: search, $options: "i" } },
         { firstName: { $regex: search, $options: "i" } },
         { lastName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },

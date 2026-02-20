@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import {
     Dialog,
@@ -17,10 +17,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useStudents } from "@/hooks/useStudents";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useEmployees } from "@/hooks/useEmployees";
-import { useParents } from "@/hooks/useParents";
 import { Copy, Download, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -29,7 +27,7 @@ interface Props {
     onClose: () => void;
 }
 
-type Role = "student" | "teacher" | "employee" | "parent" | "admin";
+type Role = "teacher" | "employee" | "admin";
 
 interface PersonOption {
     id: string;
@@ -49,24 +47,20 @@ function buildToken(payload: {
 }
 
 const ROLES: { value: Role; label: string }[] = [
-    { value: "student", label: "Student" },
     { value: "teacher", label: "Teacher" },
     { value: "employee", label: "Employee" },
-    { value: "parent", label: "Parent" },
     { value: "admin", label: "Admin (Employee)" },
 ];
 
 export function RegisterUserModal({ open, onClose }: Props) {
-    const [role, setRole] = useState<Role>("student");
+    const [role, setRole] = useState<Role>("teacher");
     const [personId, setPersonId] = useState("");
     const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
     const [registrationUrl, setRegistrationUrl] = useState<string | null>(null);
     const [generating, setGenerating] = useState(false);
 
-    const { students } = useStudents();
     const { teachers } = useTeachers();
     const { employees } = useEmployees();
-    const { parents } = useParents();
 
     // Reset when role changes
     useEffect(() => {
@@ -78,7 +72,7 @@ export function RegisterUserModal({ open, onClose }: Props) {
     // Reset fully on close
     useEffect(() => {
         if (!open) {
-            setRole("student");
+            setRole("teacher");
             setPersonId("");
             setQrDataUrl(null);
             setRegistrationUrl(null);
@@ -93,15 +87,11 @@ export function RegisterUserModal({ open, onClose }: Props) {
                 email: p.email,
             }));
         switch (role) {
-            case "student":
-                return map(students);
             case "teacher":
                 return map(teachers);
             case "employee":
             case "admin":
                 return map(employees);
-            case "parent":
-                return map(parents);
             default:
                 return [];
         }

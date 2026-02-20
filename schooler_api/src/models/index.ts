@@ -1,3 +1,4 @@
+export { Counter } from "./Counter";
 export { Attendance, IAttendance } from "./Attendance";
 export { ClassRoom, IClassRoom } from "./ClassRoom";
 export { Course, ICourse } from "./Course";

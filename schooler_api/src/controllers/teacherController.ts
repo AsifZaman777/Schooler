@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Teacher } from "../models/Teacher";
+import { nextSequence } from "../models/Counter";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
 import {
@@ -9,7 +10,9 @@ import {
 
 export const createTeacher = asyncHandler(
   async (req: Request, res: Response) => {
-    const teacher = await Teacher.create(req.body);
+    const seq = await nextSequence("teacher");
+    const teacherId = `TCH-${String(seq).padStart(4, "0")}`;
+    const teacher = await Teacher.create({ ...req.body, teacherId });
 
     res.status(201).json({
       success: true,
@@ -29,6 +32,7 @@ export const getAllTeachers = asyncHandler(
     if (departmentId) filter.departmentId = departmentId;
     if (search) {
       filter.$or = [
+        { teacherId: { $regex: search, $options: "i" } },
         { firstName: { $regex: search, $options: "i" } },
         { lastName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },

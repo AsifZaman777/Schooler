@@ -127,6 +127,10 @@ export default function TeachersPage() {
 
     const columns: ColumnDef<Teacher, unknown>[] = [
         {
+            id: "teacherId", accessorKey: "teacherId", header: "Teacher ID",
+            cell: ({ getValue }) => <span className="font-mono text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
+        },
+        {
             id: "name", header: "Teacher", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },

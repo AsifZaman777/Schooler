@@ -1,6 +1,14 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+const ROLE_HOME: Record<string, string> = {
+  admin: "/admin/dashboard",
+  teacher: "/teacher/dashboard",
+  student: "/student/dashboard",
+  parent: "/parent/dashboard",
+  employee: "/admin/dashboard",
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -69,6 +77,17 @@ export const authOptions: NextAuthOptions = {
         session.user.profile = token.profile as any;
       }
       return session;
+    },
+    async redirect({ url, baseUrl, token }: any) {
+      // After sign-in, send user straight to their role dashboard
+      const role = token?.role as string | undefined;
+      if (role && ROLE_HOME[role]) {
+        return `${baseUrl}${ROLE_HOME[role]}`;
+      }
+      // Honor explicit callback URLs that are on the same origin
+      if (url.startsWith(baseUrl)) return url;
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      return baseUrl;
     },
   },
   pages: {

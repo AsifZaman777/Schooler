@@ -101,6 +101,10 @@ export default function EmployeesPage() {
 
     const columns: ColumnDef<Employee, unknown>[] = [
         {
+            id: "employeeId", accessorKey: "employeeId", header: "Employee ID",
+            cell: ({ getValue }) => <span className="font-mono text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
+        },
+        {
             id: "name", header: "Employee", accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
