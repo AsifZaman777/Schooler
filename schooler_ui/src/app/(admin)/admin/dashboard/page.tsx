@@ -1,12 +1,15 @@
 "use client";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RegisterUserModal } from "@/components/reusable/RegisterUserModal";
 import { useDashboard } from "@/hooks/useDashboard";
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { GraduationCap, UserCheck, Briefcase, Clock, TrendingUp } from "lucide-react";
+import { GraduationCap, UserCheck, Briefcase, Clock, TrendingUp, UserPlus } from "lucide-react";
 import type { DashboardStats } from "@/types/viewModels";
 
 const PIE_COLORS = ["#3b6ef8", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
@@ -19,6 +22,8 @@ export default function AdminDashboard() {
     const incomeExpense = paymentTable.data as { month: string; income: number; expense: number }[] | null;
     const loading = stats.loading;
 
+    const [registerOpen, setRegisterOpen] = useState(false);
+
     const statCards = [
         { label: "Students Enrolled", value: overview?.studentsEnrolled ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-50" },
         { label: "Active Students", value: overview?.activeStudents ?? 0, icon: UserCheck, color: "text-green-500", bg: "bg-green-50" },
@@ -30,6 +35,17 @@ export default function AdminDashboard() {
         <>
             <Header title="Dashboard" />
             <main className="p-5 space-y-6">
+                {/* Top action bar */}
+                <div className="flex items-center justify-between">
+                    <p className="text-sm text-[--muted-foreground]">Overview of your school at a glance</p>
+                    <Button size="sm" onClick={() => setRegisterOpen(true)}>
+                        <UserPlus size={14} className="mr-2" />
+                        Register User
+                    </Button>
+                </div>
+
+                {/* Register User Modal */}
+                <RegisterUserModal open={registerOpen} onClose={() => setRegisterOpen(false)} />
                 {/* Stat Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     {statCards.map((s) => (

@@ -12,5 +12,6 @@ export const config = {
     "/teacher/:path*",
     "/student/:path*",
     "/parent/:path*",
+    // /register/:path* is intentionally excluded so QR recipients can access it unauthenticated
   ],
 };
