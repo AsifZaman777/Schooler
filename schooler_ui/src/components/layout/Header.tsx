@@ -35,7 +35,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-5 bg-[--card] border-b border-[--border] shadow-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
             <div className="flex items-center gap-3">
                 {onMenuClick && (
                     <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
