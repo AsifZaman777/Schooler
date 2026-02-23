@@ -232,6 +232,7 @@ export interface ExamMark {
 export interface Payment {
   _id: string;
   studentId: string | Student;
+  courseId: string | Course;
   amount: number;
   paymentType:
     | "tuition"
@@ -244,12 +245,41 @@ export interface Payment {
   transactionId?: string;
   dueDate: string;
   paidDate?: string;
-  status: "pending" | "paid" | "overdue" | "cancelled";
+  paymentStatus: "pending" | "paid" | "overdue" | "cancelled";
   academicYear: string;
   semester: string;
   remarks?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Enrollment ───────────────────────────────────────────────────────────────
+export interface Enrollment {
+  _id: string;
+  paymentStatus: "pending" | "paid" | "overdue" | "cancelled";
+  paymentType: string;
+  amount: number;
+  dueDate: string;
+  paidDate?: string;
+  academicYear: string;
+  semester: string;
+  remarks?: string;
+  student: {
+    _id: string;
+    studentId?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    status: "active" | "inactive" | "graduated" | "suspended";
+  };
+  course: {
+    _id: string;
+    name: string;
+    code: string;
+    credits: number;
+    duration: number;
+  };
 }
 
 // ─── Expense ──────────────────────────────────────────────────────────────────

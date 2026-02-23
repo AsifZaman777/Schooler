@@ -25,7 +25,7 @@ export function FormDialog({
 }: FormDialogProps) {
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-            <DialogContent className={`flex flex-col max-h-[90vh] p-0 gap-0 ${className ?? ""}`}>
+            <DialogContent className={`flex flex-col max-h-[90vh] p-0 gap-0 max-w-none! ${className ?? "max-w-lg"}`}>
                 {/* Sticky header */}
                 <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
                     <DialogTitle>{title}</DialogTitle>

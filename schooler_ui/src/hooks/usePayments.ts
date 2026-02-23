@@ -1,12 +1,23 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Payment, Pagination } from "@/types/viewModels";
+import type { Payment, Enrollment, Pagination } from "@/types/viewModels";
+
+export interface PaymentStats {
+  byStatus: { _id: string; count: number; totalAmount: number }[];
+  totalRevenue: number;
+  pendingAmount: number;
+}
 
 export function usePayments(initialParams = {}) {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [stats, setStats] = useState<PaymentStats | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [enrollmentPagination, setEnrollmentPagination] =
+    useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPayments = useCallback(
@@ -29,35 +40,79 @@ export function usePayments(initialParams = {}) {
     [],
   );
 
+  const fetchEnrollments = useCallback(
+    async (params: Record<string, unknown> = {}) => {
+      setEnrollmentsLoading(true);
+      try {
+        const res = await api.get("/payments/enrollments", {
+          params: { page: 1, limit: 50, ...params },
+        });
+        setEnrollments(res.data.data);
+        setEnrollmentPagination(res.data.pagination ?? null);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setEnrollmentsLoading(false);
+      }
+    },
+    [],
+  );
+
+  const fetchStats = useCallback(
+    async (params: Record<string, unknown> = {}) => {
+      try {
+        const res = await api.get("/payments/stats", { params });
+        setStats(res.data.data);
+      } catch {
+        // silently ignore stats errors
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     fetchPayments();
-  }, [fetchPayments]);
+    fetchStats();
+  }, [fetchPayments, fetchStats]);
 
   const createPayment = async (payload: Partial<Payment>) => {
     const res = await api.post("/payments", payload);
-    await fetchPayments();
+    await Promise.all([fetchPayments(), fetchStats(), fetchEnrollments()]);
     return res.data.data;
   };
 
   const updatePayment = async (id: string, payload: Partial<Payment>) => {
     const res = await api.put(`/payments/${id}`, payload);
-    await fetchPayments();
+    await Promise.all([fetchPayments(), fetchStats(), fetchEnrollments()]);
     return res.data.data;
   };
 
   const deletePayment = async (id: string) => {
     await api.delete(`/payments/${id}`);
-    await fetchPayments();
+    await Promise.all([fetchPayments(), fetchStats(), fetchEnrollments()]);
+  };
+
+  const activateStudent = async (paymentId: string) => {
+    const res = await api.patch(`/payments/${paymentId}/activate-student`);
+    await Promise.all([fetchPayments(), fetchEnrollments()]);
+    return res.data;
   };
 
   return {
     payments,
+    enrollments,
+    stats,
     pagination,
+    enrollmentPagination,
     loading,
+    enrollmentsLoading,
     error,
     fetchPayments,
+    fetchEnrollments,
+    fetchStats,
     createPayment,
     updatePayment,
     deletePayment,
+    activateStudent,
   };
 }
