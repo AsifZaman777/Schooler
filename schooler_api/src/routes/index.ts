@@ -1,4 +1,5 @@
 import { Router } from "express";
+import authRoutes from "./authRoutes";
 import studentRoutes from "./studentRoutes";
 import parentRoutes from "./parentRoutes";
 import teacherRoutes from "./teacherRoutes";
@@ -18,6 +19,7 @@ import reportRoutes from "./reportRoutes";
 const router = Router();
 
 // API Routes
+router.use("/auth", authRoutes);
 router.use("/students", studentRoutes);
 router.use("/parents", parentRoutes);
 router.use("/teachers", teacherRoutes);

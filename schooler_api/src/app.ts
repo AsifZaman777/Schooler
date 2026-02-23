@@ -18,7 +18,7 @@ app.use(
     origin:
       env.NODE_ENV === "production"
         ? ["https://yourdomain.com"] // Replace with your production domain
-        : ["http://localhost:3000", "http://localhost:5173"],
+        : true, // Allow all origins in development
     credentials: true,
   }),
 );

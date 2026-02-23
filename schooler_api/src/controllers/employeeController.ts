@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Employee } from "../models/Employee";
+import { nextSequence } from "../models/Counter";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
 import {
@@ -9,7 +10,9 @@ import {
 
 export const createEmployee = asyncHandler(
   async (req: Request, res: Response) => {
-    const employee = await Employee.create(req.body);
+    const seq = await nextSequence("employee");
+    const employeeId = `EMP-${String(seq).padStart(4, "0")}`;
+    const employee = await Employee.create({ ...req.body, employeeId });
 
     res.status(201).json({
       success: true,
@@ -29,6 +32,7 @@ export const getAllEmployees = asyncHandler(
     if (department) filter.department = department;
     if (search) {
       filter.$or = [
+        { employeeId: { $regex: search, $options: "i" } },
         { firstName: { $regex: search, $options: "i" } },
         { lastName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },

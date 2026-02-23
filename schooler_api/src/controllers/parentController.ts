@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Parent } from "../models/Parent";
 import { Student } from "../models/Student";
+import { nextSequence } from "../models/Counter";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
 import {
@@ -10,7 +11,9 @@ import {
 
 export const createParent = asyncHandler(
   async (req: Request, res: Response) => {
-    const parent = await Parent.create(req.body);
+    const seq = await nextSequence("parent");
+    const parentId = `PAR-${String(seq).padStart(4, "0")}`;
+    const parent = await Parent.create({ ...req.body, parentId });
 
     res.status(201).json({
       success: true,
@@ -28,6 +31,7 @@ export const getAllParents = asyncHandler(
     const filter: any = {};
     if (search) {
       filter.$or = [
+        { parentId: { $regex: search, $options: "i" } },
         { firstName: { $regex: search, $options: "i" } },
         { lastName: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
