@@ -146,6 +146,7 @@ export interface Course {
 // ─── ClassRoom ───────────────────────────────────────────────────────────────
 export interface ClassRoom {
   _id: string;
+  classRoomId: string;
   name: string;
   roomNumber: string;
   departmentId: string | Department;

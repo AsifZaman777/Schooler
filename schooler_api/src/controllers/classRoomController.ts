@@ -3,6 +3,7 @@ import { ClassRoom } from "../models/ClassRoom";
 import { Student } from "../models/Student";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
+import { nextSequence } from "../models/Counter";
 import {
   getPaginationParams,
   createPaginationResult,
@@ -10,7 +11,9 @@ import {
 
 export const createClassRoom = asyncHandler(
   async (req: Request, res: Response) => {
-    const classRoom = await ClassRoom.create(req.body);
+    const seq = await nextSequence("classroom");
+    const classRoomId = `CR-${String(seq).padStart(4, "0")}`;
+    const classRoom = await ClassRoom.create({ ...req.body, classRoomId });
 
     res.status(201).json({
       success: true,

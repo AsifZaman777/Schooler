@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExams } from "@/hooks/useExams";
-import { Exam } from "@/types/viewModels";
+import { useCourses } from "@/hooks/useCourses";
+import { useClassRooms } from "@/hooks/useClassRooms";
+import { Exam, Course, ClassRoom } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
@@ -21,8 +23,6 @@ const blank: TF = { name: "", examType: "midterm", courseId: "", classRoomId: ""
 
 const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
     { key: "name", label: "Exam Name", type: "text", required: true },
-    { key: "courseId", label: "Course ID", type: "text", required: true },
-    { key: "classRoomId", label: "Classroom ID", type: "text", required: true },
 ];
 
 const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
@@ -41,12 +41,18 @@ const statusOptions = [{ value: "scheduled", label: "Scheduled" }, { value: "ong
 
 export default function ExamsPage() {
     const { exams, loading, pagination, createExam, updateExam, deleteExam } = useExams();
+    const { courses } = useCourses();
+    const { classRooms } = useClassRooms();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Exam | null>(null);
     const [form, setForm] = useState<TF>(blank);
     const [confirm, setConfirm] = useState<Exam | null>(null);
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
+    const filteredClassRooms = classRooms.filter(cr => {
+        const id = typeof cr.courseId === "string" ? cr.courseId : (cr.courseId as any)?._id;
+        return id === form.courseId;
+    });
 
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
     function openEdit(ex: Exam) {
@@ -115,6 +121,24 @@ export default function ExamsPage() {
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
                             </div>
                         ))}
+                        <div>
+                            <Label>Course *</Label>
+                            <Select value={form.courseId} onValueChange={v => { f("courseId", v); f("classRoomId", ""); }} required>
+                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+                                <SelectContent>
+                                    {courses.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Classroom *</Label>
+                            <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)} required disabled={!form.courseId}>
+                                <SelectTrigger><SelectValue placeholder={form.courseId ? "Select classroom" : "Select course first"} /></SelectTrigger>
+                                <SelectContent>
+                                    {filteredClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div>
                             <Label>Type</Label>
                             <Select value={form.examType} onValueChange={v => f("examType", v)}>

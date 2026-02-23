@@ -17,8 +17,8 @@ import { ClassRoom, Department, Course } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 
-type TF = { name: string; roomNumber: string; departmentId: string; courseId: string; capacity: string; academicYear: string; semester: string; status: string };
-const blank: TF = { name: "", roomNumber: "", departmentId: "", courseId: "", capacity: "", academicYear: "", semester: "", status: "active" };
+type TF = { classRoomId: string; name: string; roomNumber: string; departmentId: string; courseId: string; capacity: string; academicYear: string; semester: string; status: string };
+const blank: TF = { classRoomId: "", name: "", roomNumber: "", departmentId: "", courseId: "", capacity: "", academicYear: "", semester: "", status: "active" };
 
 const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
     { key: "name", label: "Class Name", type: "text", required: true },
@@ -48,7 +48,7 @@ export default function ClassRoomsPage() {
     function openEdit(c: ClassRoom) {
         setEditing(c);
         setForm({
-            name: c.name, roomNumber: c.roomNumber,
+            classRoomId: c.classRoomId ?? "", name: c.name, roomNumber: c.roomNumber,
             departmentId: typeof c.departmentId === 'string' ? c.departmentId : (c.departmentId as any)?._id ?? "",
             courseId: typeof c.courseId === 'string' ? c.courseId : (c.courseId as any)?._id ?? "",
             capacity: String(c.capacity), academicYear: c.academicYear, semester: c.semester, status: c.status
@@ -71,6 +71,7 @@ export default function ClassRoomsPage() {
     }
 
     const columns: ColumnDef<ClassRoom, unknown>[] = [
+        { id: "classRoomId", accessorKey: "classRoomId", header: "ID" },
         { id: "name", accessorKey: "name", header: "Class Name" },
         { id: "roomNumber", accessorKey: "roomNumber", header: "Room No." },
         { id: "course", header: "Course", accessorFn: r => (r.courseId as { name?: string })?.name ?? "—" },
@@ -97,6 +98,10 @@ export default function ClassRoomsPage() {
             <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Classroom" : "Add Classroom"}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2">
+                            <Label>Class ID</Label>
+                            <Input value={form.classRoomId} onChange={e => f("classRoomId", e.target.value)} placeholder="e.g. CR-0001" />
+                        </div>
                         {basicFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && " *"}</Label>
