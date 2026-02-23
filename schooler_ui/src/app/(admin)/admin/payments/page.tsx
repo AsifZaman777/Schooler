@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
+import { InvoiceDialog } from "@/components/reusable/InvoiceDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,7 +19,7 @@ import { useCourses } from "@/hooks/useCourses";
 import { Payment, Enrollment, Student, Course } from "@/types/viewModels";
 import {
     Plus, Pencil, Trash2, UserCheck, CreditCard,
-    TrendingUp, Clock, AlertCircle, CheckCircle2,
+    TrendingUp, Clock, AlertCircle, CheckCircle2, Eye,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate, formatCurrency } from "@/lib/utils";
@@ -113,6 +114,7 @@ export default function PaymentsPage() {
     const [editing, setEditing] = useState<Payment | null>(null);
     const [form, setForm] = useState<TF>(blank);
     const [confirm, setConfirm] = useState<Payment | null>(null);
+    const [invoice, setInvoice] = useState<Payment | null>(null);
     const [busy, setBusy] = useState(false);
     const [enrollmentFilter, setEnrollmentFilter] = useState("all");
 
@@ -239,6 +241,15 @@ export default function PaymentsPage() {
             id: "actions", header: "",
             cell: ({ row: { original: r } }) => (
                 <div className="flex items-center gap-1">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        title="View Invoice"
+                        className="h-7 gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        onClick={() => setInvoice(r)}
+                    >
+                        <Eye size={12} />Invoice
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button>
                     <Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button>
                 </div>
@@ -373,7 +384,7 @@ export default function PaymentsPage() {
             </main>
 
             {/* ── Add / Edit Payment Dialog ─────────────────────────── */}
-            <FormDialog className="w-[800]" open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
+            <FormDialog className="w-200" open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         {/* Student */}
@@ -484,6 +495,8 @@ export default function PaymentsPage() {
                     </div>
                 </form>
             </FormDialog >
+
+            <InvoiceDialog open={!!invoice} onClose={() => setInvoice(null)} payment={invoice} />
 
             {/* ── Delete Confirm ────────────────────────────────────── */}
             < ConfirmDialog
