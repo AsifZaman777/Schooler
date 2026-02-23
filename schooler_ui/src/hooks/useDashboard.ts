@@ -10,7 +10,7 @@ export function useDashboard() {
   const activeRatio = useApi<unknown[]>("/dashboard/active-student-ratio");
   const attendanceRatio = useApi<unknown[]>("/dashboard/attendance-ratio");
   const todaysSchedule = useApi<unknown[]>("/dashboard/todays-schedule");
-  const paymentTable = useApi<unknown[]>("/dashboard/payment-table");
+  const paymentStats = useApi<unknown>("/payments/stats");
 
   return {
     stats,
@@ -18,6 +18,6 @@ export function useDashboard() {
     activeRatio,
     attendanceRatio,
     todaysSchedule,
-    paymentTable,
+    paymentStats,
   };
 }

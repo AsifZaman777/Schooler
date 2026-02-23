@@ -7,25 +7,128 @@ import { RegisterUserModal } from "@/components/reusable/RegisterUserModal";
 import { useDashboard } from "@/hooks/useDashboard";
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { GraduationCap, UserCheck, Briefcase, Clock, TrendingUp, UserPlus } from "lucide-react";
+import {
+    GraduationCap, UserCheck, Briefcase, Clock,
+    TrendingUp, UserPlus, CreditCard, Calendar,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 import type { DashboardStats } from "@/types/viewModels";
 
-const PIE_COLORS = ["#3b6ef8", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
+// ─── Constants ────────────────────────────────────────────────────────────────
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const STATUS_COLORS: Record<string, string> = {
+    active: "#22c55e", inactive: "#94a3b8", suspended: "#ef4444", graduated: "#3b6ef8",
+    paid: "#22c55e", pending: "#f59e0b", overdue: "#ef4444", cancelled: "#94a3b8",
+};
+const PIE_COLORS = ["#3b6ef8", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+
+// ─── Raw API shapes ───────────────────────────────────────────────────────────
+interface EnrollmentRaw { _id: { year: number; month: number }; count: number; }
+interface ActiveRatioRaw { status: string; count: number; }
+interface AttendanceRaw { date: string; attendanceRate: string | number; present: number; total: number; }
+interface PaymentStatsByStatus { _id: string; count: number; totalAmount: number; }
+interface PaymentStatsRaw { byStatus: PaymentStatsByStatus[]; totalRevenue: number; pendingAmount: number; }
+interface ScheduleRaw {
+    _id: string; subject: string; startTime: string; endTime: string;
+    classRoomId?: { name: string; roomNumber: string };
+    teacherId?: { firstName: string; lastName: string };
+}
+
+// ─── Shared empty chart placeholder ──────────────────────────────────────────
+function EmptyChart() {
+    return (
+        <div className="flex flex-col items-center justify-center h-50 text-[--muted-foreground]">
+            <TrendingUp size={32} className="mb-2 opacity-20" />
+            <p className="text-sm">No data available yet</p>
+        </div>
+    );
+}
+
+// ─── Custom Pie % label ───────────────────────────────────────────────────────
+function PiePctLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: {
+    cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number;
+}) {
+    if (percent < 0.05) return null;
+    const rad = Math.PI / 180;
+    const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+    return (
+        <text x={cx + r * Math.cos(-midAngle * rad)} y={cy + r * Math.sin(-midAngle * rad)}
+            fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+            {`${(percent * 100).toFixed(0)}%`}
+        </text>
+    );
+}
+
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+function StatCard({ label, value, icon: Icon, color, bg }: {
+    label: string; value: string | number; icon: React.ElementType; color: string; bg: string;
+}) {
+    return (
+        <Card>
+            <CardContent>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-xs text-[--muted-foreground]">{label}</p>
+                        <p className="text-2xl font-bold mt-1">{value}</p>
+                    </div>
+                    <span className={`h-11 w-11 rounded-xl flex items-center justify-center ${bg}`}>
+                        <Icon size={22} className={color} />
+                    </span>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
-    const { stats, enrollmentRatio, attendanceRatio, paymentTable } = useDashboard();
-    const overview = stats.data as DashboardStats | null;
-    const enrollment = enrollmentRatio.data as { month: string; count: number }[] | null;
-    const attendance = attendanceRatio.data as { name: string; value: number }[] | null;
-    const incomeExpense = paymentTable.data as { month: string; income: number; expense: number }[] | null;
-    const loading = stats.loading;
+    const { stats, enrollmentRatio, activeRatio, attendanceRatio, todaysSchedule, paymentStats } = useDashboard();
 
+    const overview = stats.data as DashboardStats | null;
+    const loading = stats.loading;
     const [registerOpen, setRegisterOpen] = useState(false);
 
+    // ── Data transforms ───────────────────────────────────────────────────────
+
+    // Enrollment trend: [{ _id:{year,month}, count }] → [{ month:"Jan '24", count }]
+    const enrollmentTrend = (enrollmentRatio.data as EnrollmentRaw[] | null)
+        ?.map(d => ({
+            month: `${MONTH_NAMES[d._id.month - 1]} '${String(d._id.year).slice(2)}`,
+            count: d.count,
+        })) ?? [];
+
+    // Student status pie: [{ status, count }] → [{ name, value }]
+    const studentStatusData = (activeRatio.data as ActiveRatioRaw[] | null)
+        ?.map(d => ({
+            name: d.status.charAt(0).toUpperCase() + d.status.slice(1),
+            value: d.count,
+        })) ?? [];
+
+    // Attendance trend: last 14 days → [{ date:"MM/DD", rate }]
+    const attendanceTrend = (attendanceRatio.data as AttendanceRaw[] | null)
+        ?.slice(-14)
+        .map(d => ({
+            date: d.date.slice(5).replace("-", "/"),
+            rate: Number(Number(d.attendanceRate).toFixed(1)),
+        })) ?? [];
+
+    // Payment status: byStatus → [{ name, value, amount, fill }]
+    const ps = paymentStats.data as PaymentStatsRaw | null;
+    const paymentStatusData = (ps?.byStatus ?? []).map(s => ({
+        name: s._id.charAt(0).toUpperCase() + s._id.slice(1),
+        value: s.count,
+        amount: s.totalAmount,
+        fill: STATUS_COLORS[s._id] ?? "#94a3b8",
+    }));
+
+    // Today's schedule
+    const schedule = (todaysSchedule.data as ScheduleRaw[] | null) ?? [];
+
     const statCards = [
-        { label: "Students Enrolled", value: overview?.studentsEnrolled ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-50" },
+        { label: "Total Students", value: overview?.studentsEnrolled ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-50" },
         { label: "Active Students", value: overview?.activeStudents ?? 0, icon: UserCheck, color: "text-green-500", bg: "bg-green-50" },
         { label: "Teachers", value: overview?.teachersEnrolled ?? 0, icon: Briefcase, color: "text-yellow-500", bg: "bg-yellow-50" },
         { label: "Classes Today", value: overview?.todaysClasses ?? 0, icon: Clock, color: "text-red-500", bg: "bg-red-50" },
@@ -39,141 +142,235 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                     <p className="text-sm text-[--muted-foreground]">Overview of your school at a glance</p>
                     <Button size="sm" onClick={() => setRegisterOpen(true)}>
-                        <UserPlus size={14} className="mr-2" />
-                        Register User
+                        <UserPlus size={14} className="mr-2" />Register User
                     </Button>
                 </div>
 
-                {/* Register User Modal */}
                 <RegisterUserModal open={registerOpen} onClose={() => setRegisterOpen(false)} />
-                {/* Stat Cards */}
+
+                {/* ── Stat Cards ────────────────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {statCards.map((s) => (
-                        <Card key={s.label}>
-                            <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-[--muted-foreground]">{s.label}</p>
-                                        <p className="text-2xl font-bold text-[--foreground] mt-1">
-                                            {loading ? "—" : s.value.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <span className={`h-11 w-11 rounded-xl flex items-center justify-center ${s.bg}`}>
-                                        <s.icon size={22} className={s.color} />
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {statCards.map(s => (
+                        <StatCard key={s.label} label={s.label}
+                            value={loading ? "—" : s.value.toLocaleString()}
+                            icon={s.icon} color={s.color} bg={s.bg}
+                        />
                     ))}
                 </div>
 
-                {/* Charts Row 1 */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {/* ── Payment Summary Mini-cards ─────────────────────── */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Card>
-                        <CardHeader><CardTitle>Enrollment Trend</CardTitle></CardHeader>
                         <CardContent>
-                            <ResponsiveContainer width="100%" height={220}>
-                                <AreaChart data={enrollment ?? []} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                                    <defs>
-                                        <linearGradient id="enrollGrad" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b6ef8" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#3b6ef8" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                                    <YAxis tick={{ fontSize: 11 }} />
-                                    <Tooltip />
-                                    <Area type="monotone" dataKey="count" stroke="#3b6ef8" fill="url(#enrollGrad)" strokeWidth={2} />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle>Income vs Expense</CardTitle></CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={220}>
-                                <BarChart data={incomeExpense ?? []} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                                    <YAxis tick={{ fontSize: 11 }} />
-                                    <Tooltip />
-                                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                                    <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} name="Income" />
-                                    <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expense" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Charts Row 2 */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                    <Card>
-                        <CardHeader><CardTitle>Attendance Overview</CardTitle></CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={180}>
-                                <PieChart>
-                                    <Pie
-                                        data={attendance ?? [{ name: "Present", value: 0 }, { name: "Absent", value: 0 }]}
-                                        cx="50%" cy="50%" innerRadius={50} outerRadius={75}
-                                        dataKey="value" paddingAngle={3}
-                                    >
-                                        {(attendance ?? []).map((_: unknown, i: number) => (
-                                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle>Active Student Ratio</CardTitle></CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={180}>
-                                <PieChart>
-                                    <Pie
-                                        data={(enrollmentRatio.data as { name: string; value: number }[] | null) ?? []}
-                                        cx="50%" cy="50%" outerRadius={75}
-                                        dataKey="value" paddingAngle={3}
-                                    >
-                                        {((enrollmentRatio.data as { name: string; value: number }[] | null) ?? []).map((_: unknown, i: number) => (
-                                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle>Quick Stats</CardTitle></CardHeader>
-                        <CardContent className="space-y-3">
-                            {[
-                                { label: "Total Students", value: overview?.studentsEnrolled, color: "text-blue-500" },
-                                { label: "Active Teachers", value: overview?.activeTeachers, color: "text-green-500" },
-                                { label: "Classes Today", value: overview?.todaysClasses, color: "text-yellow-500" },
-                            ].map((item) => (
-                                <div key={item.label} className="flex items-center justify-between py-2 border-b border-[--border] last:border-0">
-                                    <span className="text-sm text-[--muted-foreground]">{item.label}</span>
-                                    <span className={`text-sm font-semibold ${item.color}`}>
-                                        {loading ? "—" : (item.value ?? 0).toLocaleString()}
-                                    </span>
+                            <div className="flex items-center gap-3">
+                                <span className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center">
+                                    <TrendingUp size={18} className="text-green-500" />
+                                </span>
+                                <div>
+                                    <p className="text-xs text-[--muted-foreground]">Total Revenue</p>
+                                    <p className="text-lg font-bold text-green-600">{formatCurrency(ps?.totalRevenue ?? 0)}</p>
                                 </div>
-                            ))}
-                            <div className="pt-2 flex items-center gap-2 text-sm text-[--muted-foreground]">
-                                <TrendingUp size={14} className="text-green-500" />
-                                <span>Live data from API</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent>
+                            <div className="flex items-center gap-3">
+                                <span className="h-10 w-10 rounded-xl bg-yellow-50 flex items-center justify-center">
+                                    <CreditCard size={18} className="text-yellow-500" />
+                                </span>
+                                <div>
+                                    <p className="text-xs text-[--muted-foreground]">Pending Amount</p>
+                                    <p className="text-lg font-bold text-yellow-600">{formatCurrency(ps?.pendingAmount ?? 0)}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent>
+                            <div className="flex items-center gap-3">
+                                <span className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                    <Calendar size={18} className="text-blue-500" />
+                                </span>
+                                <div>
+                                    <p className="text-xs text-[--muted-foreground]">Active Teachers</p>
+                                    <p className="text-lg font-bold text-blue-600">{loading ? "—" : (overview?.activeTeachers ?? 0).toLocaleString()}</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* ── Charts Row 1: Enrollment Trend + Attendance ──────── */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Student Enrollment Trend</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">Monthly new student enrollments</p>
+                        </CardHeader>
+                        <CardContent>
+                            {enrollmentTrend.length === 0 ? <EmptyChart /> : (
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <AreaChart data={enrollmentTrend} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                                        <defs>
+                                            <linearGradient id="enrollGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b6ef8" stopOpacity={0.2} />
+                                                <stop offset="95%" stopColor="#3b6ef8" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Area type="monotone" dataKey="count" name="Enrollments"
+                                            stroke="#3b6ef8" fill="url(#enrollGrad)" strokeWidth={2} dot={{ r: 3 }} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Attendance Rate</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">Daily attendance % — last 14 days</p>
+                        </CardHeader>
+                        <CardContent>
+                            {attendanceTrend.length === 0 ? <EmptyChart /> : (
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <AreaChart data={attendanceTrend} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                                        <defs>
+                                            <linearGradient id="attendGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+                                        <Tooltip formatter={(v) => [`${v}%`, "Attendance"]} />
+                                        <Area type="monotone" dataKey="rate" name="Rate"
+                                            stroke="#22c55e" fill="url(#attendGrad)" strokeWidth={2} dot={{ r: 3 }} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* ── Charts Row 2: Pie Charts ────────────────────────── */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {/* Student Status Pie */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Student Status Breakdown</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">Distribution by current status</p>
+                        </CardHeader>
+                        <CardContent>
+                            {studentStatusData.length === 0 ? <EmptyChart /> : (
+                                <div className="flex items-center gap-6">
+                                    <ResponsiveContainer width="55%" height={200}>
+                                        <PieChart>
+                                            <Pie data={studentStatusData} cx="50%" cy="50%"
+                                                innerRadius={48} outerRadius={78} dataKey="value"
+                                                labelLine={false} label={PiePctLabel as never} paddingAngle={3}>
+                                                {studentStatusData.map((entry, i) => (
+                                                    <Cell key={i} fill={STATUS_COLORS[entry.name.toLowerCase()] ?? PIE_COLORS[i % PIE_COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                    <div className="flex flex-col gap-2.5 flex-1">
+                                        {studentStatusData.map((entry, i) => (
+                                            <div key={i} className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                        style={{ background: STATUS_COLORS[entry.name.toLowerCase()] ?? PIE_COLORS[i % PIE_COLORS.length] }} />
+                                                    <span className="text-[--muted-foreground]">{entry.name}</span>
+                                                </div>
+                                                <span className="font-semibold">{entry.value.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Payment Status Bar */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Payment Status Overview</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">Number of payments by status</p>
+                        </CardHeader>
+                        <CardContent>
+                            {paymentStatusData.length === 0 ? <EmptyChart /> : (
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={paymentStatusData} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                                        <Tooltip formatter={(value, name) =>
+                                            name === "value"
+                                                ? [`${value} payments`, "Count"]
+                                                : [formatCurrency(Number(value)), "Amount"]
+                                        } />
+                                        <Bar dataKey="value" name="Count" radius={[4, 4, 0, 0]}>
+                                            {paymentStatusData.map((entry, i) => (
+                                                <Cell key={i} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* ── Today's Schedule ──────────────────────────────── */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Today&apos;s Schedule</CardTitle>
+                        <p className="text-xs text-[--muted-foreground]">Active classes running today</p>
+                    </CardHeader>
+                    <CardContent>
+                        {schedule.length === 0
+                            ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-[--muted-foreground]">
+                                    <Calendar size={32} className="mb-2 opacity-30" />
+                                    <p className="text-sm">No classes scheduled for today</p>
+                                </div>
+                            )
+                            : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-[--border]">
+                                                {["Subject", "Time", "Room", "Teacher"].map(h => (
+                                                    <th key={h} className="text-left py-2 px-3 text-xs font-medium text-[--muted-foreground]">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {schedule.map(s => (
+                                                <tr key={s._id} className="border-b border-[--border] last:border-0 hover:bg-[--muted]/30">
+                                                    <td className="py-2.5 px-3 font-medium">{s.subject}</td>
+                                                    <td className="py-2.5 px-3 text-[--muted-foreground]">{s.startTime} – {s.endTime}</td>
+                                                    <td className="py-2.5 px-3 text-[--muted-foreground]">
+                                                        {s.classRoomId ? `${s.classRoomId.name} (${s.classRoomId.roomNumber})` : "—"}
+                                                    </td>
+                                                    <td className="py-2.5 px-3 text-[--muted-foreground]">
+                                                        {s.teacherId ? `${s.teacherId.firstName} ${s.teacherId.lastName}` : "—"}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                    </CardContent>
+                </Card>
             </main>
         </>
     );
