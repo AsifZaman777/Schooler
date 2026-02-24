@@ -5,7 +5,6 @@ import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
 import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
@@ -131,8 +130,12 @@ export default function TeachersPage() {
             cell: ({ getValue }) => <span className="font-mono text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
         },
         {
-            id: "name", header: "Teacher", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            id: "name", header: "Teacher", accessorFn: r => `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
+            cell: ({ row: { original: r } }) => {
+                const fullName = `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim();
+                const initials = `${r.firstName?.[0] ?? ""}${r.lastName?.[0] ?? ""}`.toUpperCase() || "?";
+                return (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{fullName || "—"}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>);
+            }
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
         { id: "qualification", accessorKey: "qualification", header: "Qualification" },

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -101,6 +101,7 @@ export function DataTable<T>({
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [copied, setCopied] = useState(false);
+    const [currentPageSize, setCurrentPageSize] = useState(pageSize);
 
     const table = useReactTable({
         data,
@@ -112,10 +113,11 @@ export function DataTable<T>({
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
-        initialState: { pagination: { pageSize } },
+        initialState: { pagination: { pageSize: currentPageSize } },
     });
 
-    const allRows = useMemo(() => table.getFilteredRowModel().rows.map((r) => r.original), [table]);
+    // Read fresh at call time — memo([table]) is stale because the table ref never changes
+    const getAllRows = () => table.getFilteredRowModel().rows.map((r) => r.original);
 
     return (
         <div className="card p-0 overflow-hidden">
@@ -134,13 +136,13 @@ export function DataTable<T>({
                             />
                         </div>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(allRows, columns, () => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}>
+                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(getAllRows(), columns, () => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}>
                         <Copy size={13} /> {copied ? "Copied!" : "Copy"}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportCSV(allRows, columns, exportFilename)}>
+                    <Button variant="outline" size="sm" onClick={() => exportCSV(getAllRows(), columns, exportFilename)}>
                         <Download size={13} /> CSV
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportPDF(allRows, columns, exportFilename, title)}>
+                    <Button variant="outline" size="sm" onClick={() => exportPDF(getAllRows(), columns, exportFilename, title)}>
                         <FileText size={13} /> PDF
                     </Button>
                 </div>
@@ -189,15 +191,34 @@ export function DataTable<T>({
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t border-[--border] text-sm text-[--muted-foreground]">
+                <div className="flex items-center gap-2">
+                    <span>Rows per page:</span>
+                    <select
+                        value={currentPageSize === Infinity ? "all" : currentPageSize}
+                        onChange={e => {
+                            const val = e.target.value;
+                            const size = val === "all" ? Infinity : Number(val);
+                            setCurrentPageSize(size);
+                            table.setPageSize(size === Infinity ? Math.max(table.getFilteredRowModel().rows.length, 1) : size);
+                            table.setPageIndex(0);
+                        }}
+                        className="h-7 rounded-md border border-[--border] bg-[--card] text-xs px-2 outline-none cursor-pointer"
+                    >
+                        {[10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                        <option value="all">All</option>
+                    </select>
+                </div>
                 <span>
                     {table.getFilteredRowModel().rows.length} record{table.getFilteredRowModel().rows.length !== 1 && "s"}
-                    {" · "}Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                    {currentPageSize !== Infinity && (
+                        <> &middot; Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</>
+                    )}
                 </span>
                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                    <Button variant="ghost" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage() || currentPageSize === Infinity}>
                         <ChevronLeft size={15} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                    <Button variant="ghost" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage() || currentPageSize === Infinity}>
                         <ChevronRight size={15} />
                     </Button>
                 </div>
