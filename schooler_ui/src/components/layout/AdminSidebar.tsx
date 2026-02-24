@@ -3,7 +3,7 @@ import { AppSidebar } from "./Sidebar";
 import {
     LayoutDashboard, Users, GraduationCap, Briefcase, UserCheck,
     BookOpen, Building2, DoorOpen, CalendarCheck, Clock, FilePen,
-    CreditCard, Wallet, Bell
+    CreditCard, Wallet, Bell, BarChart3, TrendingDown, DollarSign, TrendingUp,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -59,6 +59,16 @@ export function AdminSidebar() {
                     icon: Bell,
                     items: [
                         { label: "Notices", href: "/admin/notices", icon: Bell },
+                    ],
+                },
+                {
+                    label: "Reports",
+                    icon: BarChart3,
+                    items: [
+                        { label: "Profit / Expense", href: "/admin/reports/profit-expense", icon: TrendingDown },
+                        { label: "Income", href: "/admin/reports/income", icon: DollarSign },
+                        { label: "Enrollment", href: "/admin/reports/enrollment", icon: Users },
+                        { label: "Projection", href: "/admin/reports/projection", icon: TrendingUp },
                     ],
                 },
             ]}
