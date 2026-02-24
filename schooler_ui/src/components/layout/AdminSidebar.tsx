@@ -3,7 +3,7 @@ import { AppSidebar } from "./Sidebar";
 import {
     LayoutDashboard, Users, GraduationCap, Briefcase, UserCheck,
     BookOpen, Building2, DoorOpen, CalendarCheck, Clock, FilePen,
-    CreditCard, Wallet, Bell, BarChart3, TrendingDown, DollarSign, TrendingUp,
+    CreditCard, Wallet, Bell, BarChart3, TrendingDown, DollarSign, TrendingUp, ClipboardCheck,
 } from "lucide-react";
 
 export function AdminSidebar() {
@@ -38,6 +38,7 @@ export function AdminSidebar() {
                     icon: FilePen,
                     items: [
                         { label: "Exams", href: "/admin/exams", icon: FilePen },
+                        { label: "Exam Marks", href: "/admin/exams/marks", icon: ClipboardCheck },
                     ],
                 },
                 {

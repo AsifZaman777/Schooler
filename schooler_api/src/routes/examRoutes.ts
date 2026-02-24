@@ -10,18 +10,7 @@ import {
 
 const router = Router();
 
-// Exam routes
-router.post("/", validateRequest(createExamSchema), examController.createExam);
-router.get("/", examController.getAllExams);
-router.get("/:id", examController.getExamById);
-router.put(
-  "/:id",
-  validateRequest(updateExamSchema),
-  examController.updateExam,
-);
-router.delete("/:id", examController.deleteExam);
-
-// Exam marks routes
+// Exam marks routes (must be before /:id to avoid being caught as id="marks")
 router.post(
   "/marks",
   validateRequest(createExamMarkSchema),
@@ -36,5 +25,16 @@ router.put(
   examController.updateExamMark,
 );
 router.delete("/marks/:id", examController.deleteExamMark);
+
+// Exam routes
+router.post("/", validateRequest(createExamSchema), examController.createExam);
+router.get("/", examController.getAllExams);
+router.get("/:id", examController.getExamById);
+router.put(
+  "/:id",
+  validateRequest(updateExamSchema),
+  examController.updateExam,
+);
+router.delete("/:id", examController.deleteExam);
 
 export default router;

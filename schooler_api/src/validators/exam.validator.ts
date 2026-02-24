@@ -42,7 +42,7 @@ export const createExamMarkSchema = z.object({
     marksObtained: z.number().min(0, "Marks cannot be negative"),
     grade: z.string().optional(),
     remarks: z.string().optional(),
-    evaluatedBy: z.string().min(1, "Evaluator is required"),
+    evaluatedBy: z.string().optional(),
     evaluatedAt: z.string().or(z.date()).optional(),
     status: z.enum(["pending", "evaluated", "published"]).optional(),
   }),

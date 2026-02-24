@@ -1,10 +1,17 @@
 "use client";
-import { Sidebar } from "./Sidebar";
+import {
+    Sidebar, SidebarContent, SidebarGroup,
+    SidebarGroupContent, SidebarHeader,
+    SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
+    SidebarRail, SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { LayoutDashboard, Clock, CalendarCheck, FilePen } from "lucide-react";
+import { AppSidebar } from "./Sidebar";
 
 export function TeacherSidebar() {
     return (
-        <Sidebar
+        <AppSidebar
             role="teacher"
             navItems={[
                 { label: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },

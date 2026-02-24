@@ -1,10 +1,17 @@
 "use client";
-import { Sidebar } from "./Sidebar";
+import {
+    Sidebar, SidebarContent, SidebarGroup,
+    SidebarGroupContent, SidebarHeader,
+    SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
+    SidebarRail, SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { LayoutDashboard, Users, CreditCard, CalendarCheck } from "lucide-react";
+import { AppSidebar } from "./Sidebar";
 
 export function ParentSidebar() {
     return (
-        <Sidebar
+        <AppSidebar
             role="parent"
             navItems={[
                 { label: "Dashboard", href: "/parent/dashboard", icon: LayoutDashboard },
