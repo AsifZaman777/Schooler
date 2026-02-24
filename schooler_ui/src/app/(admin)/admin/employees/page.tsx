@@ -129,7 +129,6 @@ export default function EmployeesPage() {
         { id: "gender", accessorKey: "gender", header: "Gender" },
         { id: "position", accessorKey: "position", header: "Position" },
         { id: "address", accessorKey: "address", header: "Address", cell: ({ getValue }) => { const addr = getValue() as { street?: string; city?: string; state?: string; zipCode?: string; country?: string } | undefined; return <span>{[addr?.street, addr?.city, addr?.state, addr?.zipCode, addr?.country].filter(Boolean).join(", ") || "—"}</span> } },
-        { id: "position", accessorKey: "position", header: "Position" },
         {
             id: "emergency", header: "Emergency Contact",
             accessorFn: r => r.emergencyContact ? `${r.emergencyContact.name} (${r.emergencyContact.relationship})` : "—",
