@@ -12,15 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useDepartments } from "@/hooks/useDepartments";
 import { Employee } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
-type TF = { firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; street: string; city: string; state: string; zipCode: string; country: string; position: string; department: string; joiningDate: string; salary: string; status: string; emergencyName: string; emergencyRelationship: string; emergencyPhone: string };
-const blank: TF = { firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", street: "", city: "", state: "", zipCode: "", country: "", position: "", department: "", joiningDate: "", salary: "", status: "active", emergencyName: "", emergencyRelationship: "", emergencyPhone: "" };
+type TF = { employeeId: string, firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string; street: string; city: string; state: string; zipCode: string; country: string; position: string; department: string; joiningDate: string; salary: string; status: string; emergencyName: string; emergencyRelationship: string; emergencyPhone: string };
+const blank: TF = { employeeId: "", firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "", gender: "male", street: "", city: "", state: "", zipCode: "", country: "", position: "", department: "", joiningDate: "", salary: "", status: "active", emergencyName: "", emergencyRelationship: "", emergencyPhone: "" };
 
-const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string; readOnly?: boolean }[] = [
+    { key: "employeeId", label: "Employee ID", type: "text", required: false, placeholder: "EMP-001", readOnly: false },
     { key: "firstName", label: "First Name", type: "text", required: true },
     { key: "lastName", label: "Last Name", type: "text", required: true },
     { key: "email", label: "Email", type: "email", required: true },
@@ -37,10 +39,18 @@ const addressFields: { key: keyof TF; label: string; type: string; required: boo
 ];
 
 const employmentFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "position", label: "Position", type: "text", required: true },
-    { key: "department", label: "Department", type: "text", required: true },
     { key: "joiningDate", label: "Joining Date", type: "date", required: false },
     { key: "salary", label: "Salary", type: "number", required: true },
+];
+
+const positionOptions = [
+    { value: "admin", label: "Admin" },
+    { value: "teacher", label: "Teacher" },
+    { value: "staff", label: "Staff" },
+    { value: "accountant", label: "Accountant" },
+    { value: "librarian", label: "Librarian" },
+    { value: "security", label: "Security" },
+    { value: "janitor", label: "Janitor" },
 ];
 
 const emergencyFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
@@ -54,6 +64,7 @@ const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive"
 
 export default function EmployeesPage() {
     const { employees, loading, pagination, createEmployee, updateEmployee, deleteEmployee } = useEmployees();
+    const { departments } = useDepartments();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Employee | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -67,11 +78,12 @@ export default function EmployeesPage() {
         const addr = emp.address as { street?: string; city?: string; state?: string; zipCode?: string; country?: string } | undefined;
         const ec = emp.emergencyContact as { name?: string; relationship?: string; phone?: string } | undefined;
         setForm({
+            employeeId: emp.employeeId ?? "",
             firstName: emp.firstName, lastName: emp.lastName, email: emp.email, phone: emp.phone,
             dateOfBirth: emp.dateOfBirth?.slice(0, 10) ?? "", gender: emp.gender,
             street: addr?.street ?? "", city: addr?.city ?? "", state: addr?.state ?? "",
             zipCode: addr?.zipCode ?? "", country: addr?.country ?? "",
-            position: emp.position, department: String(emp.department),
+            position: emp.position, department: (emp.department as { _id?: string })?._id ?? String(emp.department),
             joiningDate: emp.joiningDate?.slice(0, 10) ?? "", salary: String(emp.salary ?? ""), status: emp.status,
             emergencyName: ec?.name ?? "", emergencyRelationship: ec?.relationship ?? "", emergencyPhone: ec?.phone ?? ""
         });
@@ -81,8 +93,13 @@ export default function EmployeesPage() {
         e.preventDefault(); setBusy(true);
         try {
             const payload = {
-                firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone,
-                dateOfBirth: form.dateOfBirth, gender: form.gender as "male" | "female" | "other",
+                employeeId: form.employeeId,
+                firstName: form.firstName,
+                lastName: form.lastName,
+                email: form.email,
+                phone: form.phone,
+                dateOfBirth: form.dateOfBirth,
+                gender: form.gender as "male" | "female" | "other",
                 address: { street: form.street, city: form.city, state: form.state, zipCode: form.zipCode, country: form.country },
                 position: form.position, department: form.department, joiningDate: form.joiningDate,
                 salary: Number(form.salary), status: form.status as "active" | "inactive" | "on-leave",
@@ -106,14 +123,30 @@ export default function EmployeesPage() {
         },
         {
             id: "name", header: "Employee", accessorFn: r => `${r.firstName} ${r.lastName}`,
-            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><Avatar size="sm"><span>{r.firstName?.[0]}{r.lastName?.[0]}</span></Avatar><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
+            cell: ({ row: { original: r } }) => (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{r.firstName} {r.lastName}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>)
         },
         { id: "phone", accessorKey: "phone", header: "Phone" },
+        { id: "gender", accessorKey: "gender", header: "Gender" },
         { id: "position", accessorKey: "position", header: "Position" },
+        { id: "address", accessorKey: "address", header: "Address", cell: ({ getValue }) => { const addr = getValue() as { street?: string; city?: string; state?: string; zipCode?: string; country?: string } | undefined; return <span>{[addr?.street, addr?.city, addr?.state, addr?.zipCode, addr?.country].filter(Boolean).join(", ") || "—"}</span> } },
+        { id: "position", accessorKey: "position", header: "Position" },
+        {
+            id: "emergency", header: "Emergency Contact",
+            accessorFn: r => r.emergencyContact ? `${r.emergencyContact.name} (${r.emergencyContact.relationship})` : "—",
+            cell: ({ row: { original: r } }) => r.emergencyContact ? (
+                <div className="text-xs">
+                    <p>{r.emergencyContact.name}</p>
+                    <p className="text-[--muted-foreground]">{r.emergencyContact.relationship}</p>
+                    <p className="text-[--muted-foreground]">{r.emergencyContact.phone}</p>
+                </div>
+            ) : "—"
+        },
         { id: "department", header: "Department", accessorFn: r => (r.department as { name?: string })?.name ?? String(r.department) },
         { id: "joiningDate", header: "Joined", accessorFn: r => formatDate(r.joiningDate) },
         { id: "salary", header: "Salary", accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "createdAt", header: "Created", accessorFn: r => formatDate(r.createdAt) },
+        { id: "updatedAt", header: "Updated", accessorFn: r => formatDate(r.updatedAt) },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
@@ -134,7 +167,7 @@ export default function EmployeesPage() {
                         {basicFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && " *"}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} readOnly={field.readOnly} className={field.readOnly ? "bg-muted cursor-not-allowed" : ""} />
                             </div>
                         ))}
                         <div>
@@ -156,6 +189,20 @@ export default function EmployeesPage() {
                     </div>
                     <div className="col-span-2 pt-2"><Label className="font-semibold">Employment Details</Label></div>
                     <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label>Position / Role *</Label>
+                            <Select value={form.position} onValueChange={v => f("position", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                                <SelectContent>{positionOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Department *</Label>
+                            <Select value={form.department} onValueChange={v => f("department", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                                <SelectContent>{departments.map(d => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                         {employmentFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && " *"}</Label>

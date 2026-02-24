@@ -98,7 +98,7 @@ export interface Teacher {
 // ─── Employee ────────────────────────────────────────────────────────────────
 export interface Employee {
   _id: string;
-  employeeId?: string;
+  employeeId: string;
   firstName: string;
   lastName: string;
   email: string;
