@@ -18,10 +18,10 @@ export function TeacherSidebar() {
                 },
                 {
                     label: "Exams",
-                    icon: Users,
+                    icon: FilePen,
                     items: [
-                        { label: "Exams", href: "/admin/exams", icon: FilePen },
-                        { label: "Exam Marks", href: "/admin/exams/marks", icon: ClipboardCheck },
+                        { label: "Exams", href: "/teacher/exams", icon: FilePen },
+                        { label: "Exam Marks", href: "/teacher/exams/marks", icon: ClipboardCheck },
                     ],
                 },
 
