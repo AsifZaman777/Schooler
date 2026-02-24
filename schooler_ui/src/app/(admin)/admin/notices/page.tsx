@@ -96,8 +96,11 @@ export default function NoticesPage() {
 
     const columns: ColumnDef<Notice, unknown>[] = [
         { id: "title", accessorKey: "title", header: "Title" },
+        { id: "content", accessorKey: "content", header: "Content", cell: ({ getValue }) => <div className="max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap">{String(getValue())}</div> },
         { id: "category", accessorKey: "category", header: "Category" },
+        { id: "targetAudience", header: "Audience", accessorFn: r => Array.isArray(r.targetAudience) ? r.targetAudience.join(", ") : String(r.targetAudience) },
         { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },
+        { id: "createdBy", header: "Created By", accessorFn: r => typeof r.createdBy === "string" ? r.createdBy : `${(r.createdBy as any)?.firstName ?? ""} ${(r.createdBy as any)?.lastName ?? ""}`.trim() || "—" },
         { id: "publishDate", header: "Published", accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—" },
         { id: "expiryDate", header: "Expires", accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—" },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>{String(getValue())}</Badge> },
