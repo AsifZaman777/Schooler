@@ -18,22 +18,23 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
-type TF = { name: string; examType: string; courseId: string; classRoomId: string; date: string; startTime: string; endTime: string; totalMarks: string; passingMarks: string; instructions: string; status: string };
-const blank: TF = { name: "", examType: "midterm", courseId: "", classRoomId: "", date: "", startTime: "", endTime: "", totalMarks: "", passingMarks: "", instructions: "", status: "scheduled" };
+type TF = { examId: string, name: string; examType: string; courseId: string; classRoomId: string; date: string; startTime: string; endTime: string; totalMarks: string; passingMarks: string; instructions: string; status: string };
+const blank: TF = { examId: "", name: "", examType: "midterm", courseId: "", classRoomId: "", date: "", startTime: "", endTime: "", totalMarks: "", passingMarks: "", instructions: "", status: "scheduled" };
 
-const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "name", label: "Exam Name", type: "text", required: true },
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "examId", label: "Exam ID", type: "text", required: true, placeholder: "e.g. CS-Q-25-01" },
+    { key: "name", label: "Exam Name", type: "text", required: true, placeholder: "e.g. Mid-Term Examination" },
 ];
 
-const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
     { key: "date", label: "Date", type: "date", required: false },
     { key: "startTime", label: "Start Time", type: "time", required: false },
     { key: "endTime", label: "End Time", type: "time", required: false },
 ];
 
-const marksFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "totalMarks", label: "Total Marks", type: "number", required: false },
-    { key: "passingMarks", label: "Passing Marks", type: "number", required: false },
+const marksFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "totalMarks", label: "Total Marks", type: "number", required: false, placeholder: "e.g. 100" },
+    { key: "passingMarks", label: "Passing Marks", type: "number", required: false, placeholder: "e.g. 40" },
 ];
 
 const examTypeOptions = [{ value: "midterm", label: "Midterm" }, { value: "final", label: "Final" }, { value: "quiz", label: "Quiz" }, { value: "assignment", label: "Assignment" }, { value: "practical", label: "Practical" }];
@@ -58,6 +59,7 @@ export default function ExamsPage() {
     function openEdit(ex: Exam) {
         setEditing(ex);
         setForm({
+            examId: ex.examId,
             name: ex.name, examType: ex.examType,
             courseId: String(typeof ex.courseId === "object" ? (ex.courseId as { _id: string })._id : ex.courseId),
             classRoomId: String(typeof ex.classRoomId === "object" ? (ex.classRoomId as { _id: string })._id : ex.classRoomId),
@@ -89,6 +91,7 @@ export default function ExamsPage() {
     }
 
     const columns: ColumnDef<Exam, unknown>[] = [
+        { id: "examId", accessorKey: "examId", header: "Exam ID" },
         { id: "name", accessorKey: "name", header: "Exam Name" },
         { id: "examType", accessorKey: "examType", header: "Type" },
         { id: "course", header: "Course", accessorFn: r => { const c = r.courseId; return typeof c === "object" ? (c as { name: string }).name : String(c); } },
@@ -118,7 +121,7 @@ export default function ExamsPage() {
                         {basicFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && " *"}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>
@@ -149,13 +152,13 @@ export default function ExamsPage() {
                         {scheduleFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} placeholder={field.placeholder} />
                             </div>
                         ))}
                         {marksFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>

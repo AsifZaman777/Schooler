@@ -198,6 +198,7 @@ export interface Routine {
 // ─── Exam ─────────────────────────────────────────────────────────────────────
 export interface Exam {
   _id: string;
+  examId: string;
   name: string;
   examType: "midterm" | "final" | "quiz" | "assignment" | "practical";
   courseId: string | Course;
