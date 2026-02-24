@@ -1,11 +1,4 @@
 "use client";
-import {
-    Sidebar, SidebarContent, SidebarGroup,
-    SidebarGroupContent, SidebarHeader,
-    SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
-    SidebarRail, SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { LayoutDashboard, Users, CreditCard, CalendarCheck } from "lucide-react";
 import { AppSidebar } from "./Sidebar";
 

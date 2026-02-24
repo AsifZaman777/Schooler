@@ -1,48 +1,147 @@
-"use client";
-import { useState } from "react";
+﻿"use client";
+import { useState, useEffect, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { FormDialog } from "@/components/reusable/FormDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
 import { useAttendance } from "@/hooks/useAttendance";
-import { Attendance } from "@/types/viewModels";
+import { useStudents } from "@/hooks/useStudents";
+import { useClassRooms } from "@/hooks/useClassRooms";
+import { useRoutines } from "@/hooks/useRoutines";
+import { useAuth } from "@/hooks/useAuth";
+import { Attendance, Student, ClassRoom } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
-import { PlusCircle } from "lucide-react";
+import { ClipboardList, History } from "lucide-react";
 
-type TF = { studentId: string; classRoomId: string; date: string; status: string; remarks: string };
-const blank: TF = { studentId: "", classRoomId: "", date: new Date().toISOString().slice(0, 10), status: "present", remarks: "" };
+type AttendanceMark = "present" | "absent" | "late" | "excused";
+
+const statusOptions = [
+    { value: "present", label: "Present" },
+    { value: "absent", label: "Absent" },
+    { value: "late", label: "Late" },
+    { value: "excused", label: "Excused" },
+];
 
 export default function TeacherAttendancePage() {
-    const { attendances, loading, createAttendance } = useAttendance();
-    const [open, setOpen] = useState(false);
-    const [form, setForm] = useState<TF>(blank);
-    const [busy, setBusy] = useState(false);
-    const f = (k: keyof TF, v: string) => setForm((p) => ({ ...p, [k]: v }));
+    const { referenceId } = useAuth();
+    const { attendances, loading: histLoading, fetchAttendances, createAttendance } = useAttendance();
+    const { students, fetchStudents, loading: studLoading } = useStudents();
+    const { classRooms } = useClassRooms();
+    const { routines, fetchRoutines } = useRoutines();
 
-    const handleSubmit = async () => {
+    const [activeTab, setActiveTab] = useState<"mark" | "history">("mark");
+    const [selectedClassRoomId, setSelectedClassRoomId] = useState<string>("");
+    const [markingStudent, setMarkingStudent] = useState<Student | null>(null);
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().slice(0, 10));
+    const [markStatus, setMarkStatus] = useState<AttendanceMark>("present");
+    const [markRemarks, setMarkRemarks] = useState("");
+    const [historyDate, setHistoryDate] = useState("");
+    const [historyClassRoomId, setHistoryClassRoomId] = useState<string>("");
+    const [busy, setBusy] = useState(false);
+
+    // Fetch only this teacher's routines to derive their assigned classrooms
+    useEffect(() => {
+        if (referenceId) fetchRoutines({ teacherId: referenceId, limit: 200 });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [referenceId]);
+
+    // Derive unique assigned classroom IDs from routines
+    const assignedClassIds = useMemo(() => {
+        const ids = new Set<string>();
+        routines.forEach(r => {
+            const id = typeof r.classRoomId === "object"
+                ? (r.classRoomId as ClassRoom)._id
+                : r.classRoomId;
+            if (id) ids.add(id);
+        });
+        return ids;
+    }, [routines]);
+
+    // Filter classRooms list to only assigned ones
+    const assignedClassRooms = useMemo(
+        () => classRooms.filter(cr => assignedClassIds.has(cr._id)),
+        [classRooms, assignedClassIds]
+    );
+
+    // Auto-select first assigned classroom once available
+    useEffect(() => {
+        if (!selectedClassRoomId && assignedClassRooms.length > 0) {
+            setSelectedClassRoomId(assignedClassRooms[0]._id);
+            setHistoryClassRoomId(assignedClassRooms[0]._id);
+        }
+    }, [assignedClassRooms, selectedClassRoomId]);
+
+    // Fetch students for selected classroom
+    useEffect(() => {
+        if (!selectedClassRoomId) return;
+        fetchStudents({ classRoomId: selectedClassRoomId, limit: 200 });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedClassRoomId]);
+
+    // Fetch history filtered to teacher's classroom + optional date
+    useEffect(() => {
+        if (!historyClassRoomId) return;
+        const params: Record<string, unknown> = { classRoomId: historyClassRoomId, limit: 200 };
+        if (historyDate) { params.startDate = historyDate; params.endDate = historyDate + "T23:59:59"; }
+        fetchAttendances(params);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [historyDate, historyClassRoomId]);
+
+    function openMarkModal(s: Student) {
+        setMarkingStudent(s);
+        setAttendanceDate(new Date().toISOString().slice(0, 10));
+        setMarkStatus("present");
+        setMarkRemarks("");
+    }
+
+    async function handleMarkSubmit() {
+        if (!markingStudent) return;
         setBusy(true);
         try {
-            await createAttendance(form);
-            toast.success("Attendance marked successfully");
-            setOpen(false);
-            setForm(blank);
+            await createAttendance({
+                studentId: markingStudent._id,
+                classRoomId: typeof markingStudent.classRoomId === "object"
+                    ? (markingStudent.classRoomId as { _id: string })._id
+                    : (markingStudent.classRoomId as string),
+                date: attendanceDate,
+                status: markStatus,
+                ...(markRemarks ? { remarks: markRemarks } : {}),
+            });
+            toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
+            setMarkingStudent(null);
         } catch {
-            toast.error("Failed to mark attendance");
+            toast.error("Failed to save attendance");
         } finally {
             setBusy(false);
         }
-    };
+    }
 
-    const columns: ColumnDef<Attendance, unknown>[] = [
-        { id: "student", header: "Student", accessorFn: (r) => { const s = r.studentId as { firstName?: string; lastName?: string }; return s?.firstName ? `${s.firstName} ${s.lastName ?? ""}`.trim() : String(r.studentId); } },
-        { id: "class", header: "Class", accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
-        { id: "date", header: "Date", accessorFn: (r) => formatDate(r.date) },
+    const studentColumns: ColumnDef<Student, unknown>[] = [
+        { id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}` },
+        { id: "studentId", accessorKey: "studentId", header: "Student ID" },
+        {
+            id: "status", accessorKey: "status", header: "Status",
+            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>,
+        },
+        {
+            id: "actions", header: "",
+            cell: ({ row: { original: s } }) => (
+                <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
+                    <ClipboardList size={13} className="mr-1" /> Mark
+                </Button>
+            ),
+        },
+    ];
+
+    const historyColumns: ColumnDef<Attendance, unknown>[] = [
+        { id: "student", header: "Student", accessorFn: r => { const s = r.studentId; return typeof s === "object" ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}` : String(s); } },
+        { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge> },
         { id: "remarks", accessorKey: "remarks", header: "Remarks" },
     ];
@@ -51,43 +150,99 @@ export default function TeacherAttendancePage() {
         <>
             <Header title="Attendance" />
             <main className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-[--foreground]">Attendance Records</h2>
-                    <Button onClick={() => setOpen(true)}><PlusCircle size={16} className="mr-2" />Mark Attendance</Button>
+                {/* Tabs */}
+                <div className="flex gap-2 border-b pb-3">
+                    <Button variant={activeTab === "mark" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("mark")}>
+                        <ClipboardList size={14} className="mr-1" /> Mark Attendance
+                    </Button>
+                    <Button variant={activeTab === "history" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("history")}>
+                        <History size={14} className="mr-1" /> History
+                    </Button>
                 </div>
-                {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
-                ) : (
-                    <DataTable data={attendances} columns={columns} title="Attendance" exportFilename="teacher-attendance" />
+
+                {/* Mark Attendance Tab */}
+                {activeTab === "mark" && (
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-end gap-4">
+                            <div className="flex flex-col gap-1">
+                                <Label className="text-xs">Classroom</Label>
+                                <Select value={selectedClassRoomId} onValueChange={setSelectedClassRoomId}
+                                    disabled={assignedClassRooms.length === 0}>
+                                    <SelectTrigger className="w-52">
+                                        <SelectValue placeholder={assignedClassRooms.length === 0 ? "No assigned classes" : "Select classroom"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {assignedClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        {studLoading
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loadingâ€¦</div>
+                            : <DataTable data={students} columns={studentColumns} title="Students" exportFilename="students" />}
+                    </div>
+                )}
+
+                {/* History Tab */}
+                {activeTab === "history" && (
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-end gap-4">
+                            <div className="flex flex-col gap-1">
+                                <Label className="text-xs">Classroom</Label>
+                                <Select value={historyClassRoomId} onValueChange={setHistoryClassRoomId}
+                                    disabled={assignedClassRooms.length === 0}>
+                                    <SelectTrigger className="w-52"><SelectValue placeholder="Select classroom" /></SelectTrigger>
+                                    <SelectContent>
+                                        {assignedClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <Label className="text-xs">Filter by Date</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input type="date" value={historyDate} onChange={e => setHistoryDate(e.target.value)} className="w-44" />
+                                    {historyDate && <Button variant="ghost" size="sm" onClick={() => setHistoryDate("")}>Clear</Button>}
+                                </div>
+                            </div>
+                            <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
+                        </div>
+                        {histLoading
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loadingâ€¦</div>
+                            : <DataTable data={attendances} columns={historyColumns} title="Attendance History" exportFilename="teacher-attendance-history" />}
+                    </div>
                 )}
             </main>
-            <DialogRoot open={open} onOpenChange={setOpen}>
-                <DialogContent>
-                    <DialogClose onClose={() => setOpen(false)} />
-                    <DialogHeader><DialogTitle>Mark Attendance</DialogTitle></DialogHeader>
-                    <div className="px-6 py-5 grid grid-cols-2 gap-4">
-                        <div><Label>Student ID</Label><Input value={form.studentId} onChange={(e) => f("studentId", e.target.value)} /></div>
-                        <div><Label>Class ID</Label><Input value={form.classRoomId} onChange={(e) => f("classRoomId", e.target.value)} /></div>
-                        <div><Label>Date</Label><Input type="date" value={form.date} onChange={(e) => f("date", e.target.value)} /></div>
-                        <div>
-                            <Label>Status</Label>
-                            <Select value={form.status} onValueChange={(v) => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {["present", "absent", "late", "excused"].map((s) => (
-                                        <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="col-span-2"><Label>Remarks</Label><Input value={form.remarks} onChange={(e) => f("remarks", e.target.value)} /></div>
+
+            {/* Per-student Mark Modal */}
+            <FormDialog
+                open={!!markingStudent}
+                onClose={() => setMarkingStudent(null)}
+                title={markingStudent ? `Mark Attendance â€” ${markingStudent.firstName} ${markingStudent.lastName}` : ""}
+            >
+                <div className="space-y-4">
+                    <div className="flex flex-col gap-1">
+                        <Label className="text-xs">Date *</Label>
+                        <Input type="date" value={attendanceDate} onChange={e => setAttendanceDate(e.target.value)} className="w-44" />
                     </div>
-                    <div className="px-6 pb-5 flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+                    <div className="flex flex-col gap-1">
+                        <Label className="text-xs">Status *</Label>
+                        <Select value={markStatus} onValueChange={v => setMarkStatus(v as AttendanceMark)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                {statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
                     </div>
-                </DialogContent>
-            </DialogRoot>
+                    <div className="flex flex-col gap-1">
+                        <Label className="text-xs">Remarks</Label>
+                        <Input placeholder="Optional" value={markRemarks} onChange={e => setMarkRemarks(e.target.value)} />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>Cancel</Button>
+                        <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>{busy ? "Savingâ€¦" : "Submit"}</Button>
+                    </div>
+                </div>
+            </FormDialog>
         </>
     );
 }

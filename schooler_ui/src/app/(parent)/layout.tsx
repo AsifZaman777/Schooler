@@ -1,12 +1,13 @@
 import { ParentSidebar } from "@/components/layout/ParentSidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ParentLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex min-h-screen bg-[--background]">
+        <SidebarProvider>
             <ParentSidebar />
-            <div className="flex-1 flex flex-col min-w-0">
+            <SidebarInset className="flex flex-col min-w-0 bg-[--background]">
                 {children}
-            </div>
-        </div>
+            </SidebarInset>
+        </SidebarProvider>
     );
 }
