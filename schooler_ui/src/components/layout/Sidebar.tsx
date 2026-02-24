@@ -4,6 +4,14 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LucideIcon, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import {
+    Sidebar, SidebarContent, SidebarGroup,
+    SidebarGroupContent, SidebarHeader,
+    SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+    SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
+    SidebarRail, SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export interface NavItem {
     label: string;
@@ -21,18 +29,27 @@ export interface NavGroup {
 export type NavItemOrGroup = NavItem | NavGroup;
 
 function isNavGroup(item: NavItemOrGroup): item is NavGroup {
-    return 'items' in item;
+    return "items" in item;
 }
 
-interface SidebarProps {
+interface AppSidebarProps {
     role: "admin" | "teacher" | "parent";
     navItems: NavItemOrGroup[];
     logo?: React.ReactNode;
 }
 
-export function Sidebar({ role, navItems, logo }: SidebarProps) {
+export function AppSidebar({ role, navItems }: AppSidebarProps) {
     const pathname = usePathname();
-    const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+    const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+        // Auto-open the group whose child is active
+        const active = new Set<string>();
+        navItems.forEach(item => {
+            if (isNavGroup(item) && item.items.some(c => pathname.startsWith(c.href))) {
+                active.add(item.label);
+            }
+        });
+        return active;
+    });
 
     const roleLabel: Record<string, string> = {
         admin: "Administrator",
@@ -43,101 +60,139 @@ export function Sidebar({ role, navItems, logo }: SidebarProps) {
     const toggleGroup = (label: string) => {
         setOpenGroups(prev => {
             const next = new Set(prev);
-            if (next.has(label)) {
-                next.delete(label);
-            } else {
-                next.add(label);
-            }
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
             return next;
         });
     };
 
     return (
-        <aside className="sidebar w-[--sidebar-width] flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-y-auto">
-            {/* Logo */}
-            <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-                {logo ?? (
-                    <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-[--primary] text-white font-bold text-sm">S</span>
-                )}
-                <div>
-                    <span className="block text-sm font-bold text-white">Schooler</span>
-                    <span className="block text-[10px] text-[--sidebar-muted] capitalize">{roleLabel[role]}</span>
+        <Sidebar collapsible="icon">
+            <SidebarHeader className="border-b border-[--sidebar-border] px-3 py-3">
+                {/* Expanded */}
+                <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+                    <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-[--sidebar-primary] text-[--sidebar-primary-foreground] font-bold text-sm shrink-0">
+                        S
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-bold text-[--sidebar-foreground] truncate">Schooler</span>
+                        <span className="block text-[10px] text-[--sidebar-foreground]/50 capitalize">{roleLabel[role]}</span>
+                    </div>
+                    <SidebarTrigger className="ml-auto h-7 w-7 text-[--sidebar-foreground]/60 hover:text-[--sidebar-foreground]" />
                 </div>
-            </div>
+                {/* Collapsed — show trigger only */}
+                <div className="hidden group-data-[collapsible=icon]:flex justify-center">
+                    <SidebarTrigger className="h-7 w-7 text-[--sidebar-foreground]/60 hover:text-[--sidebar-foreground]" />
+                </div>
+            </SidebarHeader>
 
-            {/* Nav */}
-            <nav className="flex-1 px-3 py-4 space-y-0.5">
-                {navItems.map((item, index) => {
-                    if (isNavGroup(item)) {
-                        const isOpen = openGroups.has(item.label);
-                        const hasActiveChild = item.items.some(child =>
-                            pathname === child.href || (child.href !== `/${role}` && pathname.startsWith(child.href))
-                        );
-
-                        return (
-                            <div key={index}>
-                                <button
-                                    onClick={() => toggleGroup(item.label)}
-                                    className={cn(
-                                        "sidebar-item w-full",
-                                        hasActiveChild && "active"
-                                    )}
-                                >
-                                    <item.icon size={16} />
-                                    <span className="flex-1 text-left">{item.label}</span>
-                                    <ChevronDown
-                                        size={14}
-                                        className={cn(
-                                            "transition-transform duration-200",
-                                            isOpen && "rotate-180"
-                                        )}
-                                    />
-                                </button>
-                                {isOpen && (
-                                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
-                                        {item.items.map((child) => {
-                                            const active = pathname === child.href || (child.href !== `/${role}` && pathname.startsWith(child.href));
-                                            return (
-                                                <Link
-                                                    key={child.href}
-                                                    href={child.href}
-                                                    className={cn("sidebar-item text-xs", active && "active")}
-                                                >
-                                                    <child.icon size={14} />
-                                                    <span className="flex-1">{child.label}</span>
-                                                    {child.badge !== undefined && (
-                                                        <span className="ml-auto text-[10px] font-semibold bg-[--primary] text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                                                            {child.badge}
+            <SidebarContent>
+                <SidebarGroup>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {navItems.map((item, index) => {
+                                if (isNavGroup(item)) {
+                                    const isOpen = openGroups.has(item.label);
+                                    const hasActiveChild = item.items.some(child =>
+                                        pathname === child.href ||
+                                        (child.href !== `/${role}` && pathname.startsWith(child.href))
+                                    );
+                                    return (
+                                        <SidebarMenuItem key={index}>
+                                            <Collapsible
+                                                open={isOpen}
+                                                onOpenChange={() => toggleGroup(item.label)}
+                                            >
+                                                <CollapsibleTrigger asChild>
+                                                    <SidebarMenuButton
+                                                        isActive={hasActiveChild}
+                                                        tooltip={item.label}
+                                                        className={cn(
+                                                            "w-full",
+                                                            hasActiveChild &&
+                                                            "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
+                                                        )}
+                                                    >
+                                                        <item.icon size={16} className="shrink-0" />
+                                                        <span className="flex-1 text-left">{item.label}</span>
+                                                        <ChevronDown
+                                                            size={14}
+                                                            className={cn(
+                                                                "ml-auto shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden",
+                                                                isOpen && "rotate-180"
+                                                            )}
+                                                        />
+                                                    </SidebarMenuButton>
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent>
+                                                    <SidebarMenuSub>
+                                                        {item.items.map(child => {
+                                                            const active =
+                                                                pathname === child.href ||
+                                                                (child.href !== `/${role}` && pathname.startsWith(child.href));
+                                                            return (
+                                                                <SidebarMenuSubItem key={child.href}>
+                                                                    <SidebarMenuSubButton
+                                                                        asChild
+                                                                        isActive={active}
+                                                                        className={cn(
+                                                                            active &&
+                                                                            "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
+                                                                        )}
+                                                                    >
+                                                                        <Link href={child.href}>
+                                                                            <child.icon size={14} />
+                                                                            <span>{child.label}</span>
+                                                                            {child.badge !== undefined && (
+                                                                                <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                                                    {child.badge}
+                                                                                </span>
+                                                                            )}
+                                                                        </Link>
+                                                                    </SidebarMenuSubButton>
+                                                                </SidebarMenuSubItem>
+                                                            );
+                                                        })}
+                                                    </SidebarMenuSub>
+                                                </CollapsibleContent>
+                                            </Collapsible>
+                                        </SidebarMenuItem>
+                                    );
+                                } else {
+                                    const active =
+                                        pathname === item.href ||
+                                        (item.href !== `/${role}` && pathname.startsWith(item.href));
+                                    return (
+                                        <SidebarMenuItem key={item.href}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={active}
+                                                tooltip={item.label}
+                                                className={cn(
+                                                    active &&
+                                                    "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
+                                                )}
+                                            >
+                                                <Link href={item.href}>
+                                                    <item.icon size={16} className="shrink-0" />
+                                                    <span>{item.label}</span>
+                                                    {item.badge !== undefined && (
+                                                        <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                            {item.badge}
                                                         </span>
                                                     )}
                                                 </Link>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    } else {
-                        const active = pathname === item.href || (item.href !== `/${role}` && pathname.startsWith(item.href));
-                        return (
-                            <Link key={item.href} href={item.href} className={cn("sidebar-item", active && "active")}>
-                                <item.icon size={16} />
-                                <span className="flex-1">{item.label}</span>
-                                {item.badge !== undefined && (
-                                    <span className="ml-auto text-[10px] font-semibold bg-[--primary] text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                                        {item.badge}
-                                    </span>
-                                )}
-                            </Link>
-                        );
-                    }
-                })}
-            </nav>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                }
+                            })}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
 
-            {/* Bottom */}
-            <div className="px-4 py-4 border-t border-white/10 text-[11px] text-[--sidebar-muted]">
-                © {new Date().getFullYear()} Schooler
-            </div>
-        </aside>
+            <SidebarRail />
+        </Sidebar>
     );
 }
