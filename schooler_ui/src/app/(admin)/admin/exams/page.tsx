@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExams } from "@/hooks/useExams";
 import { useCourses } from "@/hooks/useCourses";
 import { useClassRooms } from "@/hooks/useClassRooms";
@@ -126,38 +126,28 @@ export default function ExamsPage() {
                         ))}
                         <div>
                             <Label>Course *</Label>
-                            <FormCombobox
-                                items={courses}
-                                value={form.courseId}
-                                onValueChange={v => { f("courseId", v); f("classRoomId", ""); }}
-                                required
-                                placeholder="Select course"
-                                renderItem={c => c.name}
-                                getItemValue={c => c._id}
-                            />
+                            <Select value={form.courseId} onValueChange={v => { f("courseId", v); f("classRoomId", ""); }} required>
+                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+                                <SelectContent>
+                                    {courses.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <Label>Classroom *</Label>
-                            <FormCombobox
-                                items={filteredClassRooms}
-                                value={form.classRoomId}
-                                onValueChange={v => f("classRoomId", v)}
-                                required
-                                placeholder={form.courseId ? "Select classroom" : "Select course first"}
-                                renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
-                                getItemValue={cr => cr._id}
-                            />
+                            <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)} required disabled={!form.courseId}>
+                                <SelectTrigger><SelectValue placeholder={form.courseId ? "Select classroom" : "Select course first"} /></SelectTrigger>
+                                <SelectContent>
+                                    {filteredClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <Label>Type</Label>
-                            <FormCombobox
-                                items={examTypeOptions}
-                                value={form.examType}
-                                onValueChange={v => f("examType", v)}
-                                placeholder="Select exam type"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.examType} onValueChange={v => f("examType", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{examTypeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                         {scheduleFields.map(field => (
                             <div key={field.key}>
@@ -173,14 +163,10 @@ export default function ExamsPage() {
                         ))}
                         <div>
                             <Label>Status</Label>
-                            <FormCombobox
-                                items={statusOptions}
-                                value={form.status}
-                                onValueChange={v => f("status", v)}
-                                placeholder="Select status"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                         <div className="col-span-2"><Label>Instructions</Label><Input value={form.instructions} onChange={e => f("instructions", e.target.value)} /></div>
                     </div>

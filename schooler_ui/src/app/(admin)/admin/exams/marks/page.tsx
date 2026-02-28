@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClassRooms } from "@/hooks/useClassRooms";
 import { useExams } from "@/hooks/useExams";
 import { useExamMarks } from "@/hooks/useExamMarks";
@@ -241,14 +241,14 @@ export default function ExamMarksPage() {
         {
             id: "status", accessorKey: "status", header: "Status",
             cell: ({ row: { original: r } }) => (
-                <FormCombobox
-                    items={statusOptions}
-                    value={r.status}
-                    onValueChange={v => updateRow(r._id, "status", v)}
-                    placeholder="Select status"
-                    renderItem={opt => opt.label}
-                    getItemValue={opt => opt.value}
-                />
+                <Select value={r.status} onValueChange={v => updateRow(r._id, "status", v)}>
+                    <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {statusOptions.map(opt => (
+                            <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             ),
         },
         {
@@ -334,30 +334,41 @@ export default function ExamMarksPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <Label>Classroom</Label>
-                            <FormCombobox
-                                items={classRooms}
-                                value={selectedClassId}
-                                onValueChange={setSelectedClassId}
-                                placeholder="Select a classroom…"
-                                renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
-                                getItemValue={cr => cr._id}
-                            />
+                            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a classroom…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {classRooms.map(cr => (
+                                        <SelectItem key={cr._id} value={cr._id}>
+                                            {cr.name}{cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-1.5">
                             <Label>Exam</Label>
-                            <FormCombobox
-                                items={filteredExams}
+                            <Select
                                 value={selectedExamId}
                                 onValueChange={setSelectedExamId}
                                 disabled={!selectedClassId || filteredExams.length === 0}
-                                placeholder={
-                                    !selectedClassId ? "Select a classroom first…" :
-                                        filteredExams.length === 0 ? "No exams for this class" :
-                                            "Select an exam…"
-                                }
-                                renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
-                                getItemValue={ex => ex._id}
-                            />
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={
+                                        !selectedClassId ? "Select a classroom first…" :
+                                            filteredExams.length === 0 ? "No exams for this class" :
+                                                "Select an exam…"
+                                    } />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredExams.map(ex => (
+                                        <SelectItem key={ex._id} value={ex._id}>
+                                            {ex.name} — {ex.examType} ({ex.totalMarks} marks)
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 

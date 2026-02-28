@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useParents } from "@/hooks/useParents";
 import { Parent } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -127,14 +127,14 @@ export default function ParentsPage() {
                         ))}
                         <div>
                             <Label>Relationship*</Label>
-                            <FormCombobox
-                                items={relationshipOptions}
-                                value={form.relationship}
-                                onValueChange={v => f("relationship", v)}
-                                placeholder="Select relationship"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.relationship} onValueChange={v => f("relationship", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select relationship" /></SelectTrigger>
+                                <SelectContent>
+                                    {relationshipOptions.map(opt => (
+                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
                         {addressFields.map(field => (

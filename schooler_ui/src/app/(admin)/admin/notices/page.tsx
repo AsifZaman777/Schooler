@@ -10,7 +10,7 @@ import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNotices } from "@/hooks/useNotices";
 import { useAuth } from "@/hooks/useAuth";
 import { Notice } from "@/types/viewModels";
@@ -124,25 +124,17 @@ export default function NoticesPage() {
                         <div className="col-span-2"><Label>Title *</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
                         <div>
                             <Label>Category</Label>
-                            <FormCombobox
-                                items={categoryOptions}
-                                value={form.category}
-                                onValueChange={v => f("category", v)}
-                                placeholder="Select category"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.category} onValueChange={v => f("category", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{categoryOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <Label>Priority</Label>
-                            <FormCombobox
-                                items={priorityOptions}
-                                value={form.priority}
-                                onValueChange={v => f("priority", v)}
-                                placeholder="Select priority"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.priority} onValueChange={v => f("priority", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{priorityOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                         <div className="col-span-2">
                             <Label>Target Audience *</Label>
@@ -163,14 +155,10 @@ export default function NoticesPage() {
                         </div>
                         <div>
                             <Label>Status</Label>
-                            <FormCombobox
-                                items={statusOptions}
-                                value={form.status}
-                                onValueChange={v => f("status", v)}
-                                placeholder="Select status"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                         {dateFields.map(field => (
                             <div key={field.key}>

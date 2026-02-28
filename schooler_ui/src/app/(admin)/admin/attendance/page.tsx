@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { useAttendance } from "@/hooks/useAttendance";
@@ -246,14 +246,17 @@ export default function AttendancePage() {
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
                                 <Label className="text-xs">Filter by Classroom</Label>
-                                <FormCombobox
-                                    items={classRooms}
-                                    value={selectedClassRoomId}
-                                    onValueChange={setSelectedClassRoomId}
-                                    placeholder="Select classroom"
-                                    renderItem={cr => cr.name}
-                                    getItemValue={cr => cr._id}
-                                />
+                                <Select value={selectedClassRoomId} onValueChange={setSelectedClassRoomId}>
+                                    <SelectTrigger className="w-52">
+                                        <SelectValue placeholder="All Classrooms" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Classrooms</SelectItem>
+                                        {classRooms.map(cr => (
+                                            <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -284,14 +287,17 @@ export default function AttendancePage() {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <Label className="text-xs">Filter by Classroom</Label>
-                                <FormCombobox
-                                    items={classRooms}
-                                    value={historyClassRoomId}
-                                    onValueChange={setHistoryClassRoomId}
-                                    placeholder="Select classroom"
-                                    renderItem={cr => cr.name}
-                                    getItemValue={cr => cr._id}
-                                />
+                                <Select value={historyClassRoomId} onValueChange={setHistoryClassRoomId}>
+                                    <SelectTrigger className="w-52">
+                                        <SelectValue placeholder="All Classrooms" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Classrooms</SelectItem>
+                                        {classRooms.map(cr => (
+                                            <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
                         </div>
@@ -337,14 +343,14 @@ export default function AttendancePage() {
                     </div>
                     <div className="flex flex-col gap-1">
                         <Label className="text-xs">Status *</Label>
-                        <FormCombobox
-                            items={statusOptions}
-                            value={editStatus}
-                            onValueChange={v => setEditStatus(v as AttendanceMark)}
-                            placeholder="Select status"
-                            renderItem={opt => opt.label}
-                            getItemValue={opt => opt.value}
-                        />
+                        <Select value={editStatus} onValueChange={v => setEditStatus(v as AttendanceMark)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                {statusOptions.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="flex flex-col gap-1">
                         <Label className="text-xs">Remarks</Label>
@@ -381,14 +387,14 @@ export default function AttendancePage() {
                     </div>
                     <div className="flex flex-col gap-1">
                         <Label className="text-xs">Status *</Label>
-                        <FormCombobox
-                            items={statusOptions}
-                            value={markStatus}
-                            onValueChange={v => setMarkStatus(v as AttendanceMark)}
-                            placeholder="Select status"
-                            renderItem={opt => opt.label}
-                            getItemValue={opt => opt.value}
-                        />
+                        <Select value={markStatus} onValueChange={v => setMarkStatus(v as AttendanceMark)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                {statusOptions.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="flex flex-col gap-1">
                         <Label className="text-xs">Remarks</Label>

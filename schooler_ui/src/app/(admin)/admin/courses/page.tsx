@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCourses } from "@/hooks/useCourses";
 import { useDepartments } from "@/hooks/useDepartments";
 import { Course, Department } from "@/types/viewModels";
@@ -99,14 +99,16 @@ export default function CoursesPage() {
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div>
                             <Label>Department *</Label>
-                            <FormCombobox
-                                items={departments}
-                                value={form.departmentId}
-                                onValueChange={v => f("departmentId", v)}
-                                placeholder="Select department"
-                                renderItem={dept => dept.name}
-                                getItemValue={dept => dept._id}
-                            />
+                            <Select value={form.departmentId} onValueChange={v => f("departmentId", v)} required>
+                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                                <SelectContent>
+                                    {departments.map(dept => (
+                                        <SelectItem key={dept._id} value={dept._id}>
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         {detailFields.map(field => (
                             <div key={field.key}>
@@ -116,14 +118,10 @@ export default function CoursesPage() {
                         ))}
                         <div>
                             <Label>Status</Label>
-                            <FormCombobox
-                                items={statusOptions}
-                                value={form.status}
-                                onValueChange={v => f("status", v)}
-                                placeholder="Select status"
-                                renderItem={opt => opt.label}
-                                getItemValue={opt => opt.value}
-                            />
+                            <Select value={form.status} onValueChange={v => f("status", v)}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
