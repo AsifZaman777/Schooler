@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useExpenses } from "@/hooks/useExpenses";
 import { Expense } from "@/types/viewModels";
 import { Plus, Pencil, Trash2, Zap, Wifi, Building2, Droplets, ShieldCheck, Wrench, GraduationCap, Phone } from "lucide-react";
@@ -262,10 +262,14 @@ export default function ExpensesPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label>Category</Label>
-                            <Select value={form.category} onValueChange={v => f("category", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{categoryOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={categoryOptions}
+                                value={form.category}
+                                onValueChange={v => f("category", v)}
+                                placeholder="Select category"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         {basicFields.map(field => (
                             <div key={field.key}>
@@ -275,17 +279,25 @@ export default function ExpensesPage() {
                         ))}
                         <div>
                             <Label>Payment Method</Label>
-                            <Select value={form.paymentMethod} onValueChange={v => f("paymentMethod", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{paymentMethodOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={paymentMethodOptions}
+                                value={form.paymentMethod}
+                                onValueChange={v => f("paymentMethod", v)}
+                                placeholder="Select payment method"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         <div>
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v)}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div className="col-span-2"><Label>Remarks</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>

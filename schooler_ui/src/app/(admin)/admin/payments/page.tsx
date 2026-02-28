@@ -10,9 +10,7 @@ import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { InvoiceDialog } from "@/components/reusable/InvoiceDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { usePayments } from "@/hooks/usePayments";
 import { useStudents } from "@/hooks/useStudents";
 import { useCourses } from "@/hooks/useCourses";
@@ -366,13 +364,14 @@ export default function PaymentsPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Label className="text-sm whitespace-nowrap">Filter by status:</Label>
-                                <Select value={enrollmentFilter} onValueChange={setEnrollmentFilter}>
-                                    <SelectTrigger className="w-36 h-8 text-sm"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        {paymentStatusOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                <FormCombobox
+                                    items={paymentStatusOptions}
+                                    value={enrollmentFilter}
+                                    onValueChange={setEnrollmentFilter}
+                                    placeholder="Select status"
+                                    renderItem={opt => opt.label}
+                                    getItemValue={opt => opt.value}
+                                />
                             </div>
                         </div>
                         {enrollmentsLoading
@@ -390,31 +389,27 @@ export default function PaymentsPage() {
                         {/* Student */}
                         <div className="col-span-2 md:col-span-1">
                             <Label>Student <span className="text-red-500">*</span></Label>
-                            <Select value={form.studentId} onValueChange={v => f("studentId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-                                <SelectContent>
-                                    {students.map(s => (
-                                        <SelectItem key={s._id} value={s._id}>
-                                            {s.firstName} {s.lastName} {s.studentId ? `(${s.studentId})` : ""}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={students}
+                                value={form.studentId}
+                                onValueChange={v => f("studentId", v)}
+                                placeholder="Select student"
+                                renderItem={s => `${s.firstName} ${s.lastName} ${s.studentId ? `(${s.studentId})` : ""}`}
+                                getItemValue={s => s._id}
+                            />
                         </div>
 
                         {/* Course */}
                         <div className="col-span-2 md:col-span-1">
                             <Label>Course <span className="text-red-500">*</span></Label>
-                            <Select value={form.courseId} onValueChange={v => f("courseId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
-                                <SelectContent>
-                                    {courses.map(c => (
-                                        <SelectItem key={c._id} value={c._id}>
-                                            {c.name} ({c.code})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={courses}
+                                value={form.courseId}
+                                onValueChange={v => f("courseId", v)}
+                                placeholder="Select course"
+                                renderItem={c => `${c.name} (${c.code})`}
+                                getItemValue={c => c._id}
+                            />
                         </div>
 
                         {/* Amount */}
@@ -426,28 +421,40 @@ export default function PaymentsPage() {
                         {/* Payment Type */}
                         <div>
                             <Label>Payment Type</Label>
-                            <Select value={form.paymentType} onValueChange={v => f("paymentType", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{paymentTypeOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={paymentTypeOptions}
+                                value={form.paymentType}
+                                onValueChange={v => f("paymentType", v)}
+                                placeholder="Select payment type"
+                                renderItem={o => o.label}
+                                getItemValue={o => o.value}
+                            />
                         </div>
 
                         {/* Payment Method */}
                         <div>
                             <Label>Payment Method</Label>
-                            <Select value={form.paymentMethod} onValueChange={v => f("paymentMethod", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{paymentMethodOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={paymentMethodOptions}
+                                value={form.paymentMethod}
+                                onValueChange={v => f("paymentMethod", v)}
+                                placeholder="Select payment method"
+                                renderItem={o => o.label}
+                                getItemValue={o => o.value}
+                            />
                         </div>
 
                         {/* Status */}
                         <div>
                             <Label>Payment Status</Label>
-                            <Select value={form.paymentStatus} onValueChange={v => f("paymentStatus", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{paymentStatusOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={paymentStatusOptions}
+                                value={form.paymentStatus}
+                                onValueChange={v => f("paymentStatus", v)}
+                                placeholder="Select payment status"
+                                renderItem={o => o.label}
+                                getItemValue={o => o.value}
+                            />
                         </div>
 
                         {/* Transaction ID */}

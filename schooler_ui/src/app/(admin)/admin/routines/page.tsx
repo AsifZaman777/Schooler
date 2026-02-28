@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useRoutines } from "@/hooks/useRoutines";
 import { useClassRooms } from "@/hooks/useClassRooms";
 import { useTeachers } from "@/hooks/useTeachers";
@@ -131,32 +131,27 @@ export default function RoutinesPage() {
                     {/* Classroom */}
                     <div className="flex flex-col gap-1">
                         <Label>Classroom *</Label>
-                        <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)}>
-                            <SelectTrigger><SelectValue placeholder="Select classroom" /></SelectTrigger>
-                            <SelectContent>
-                                {classRooms.map(cr => (
-                                    <SelectItem key={cr._id} value={cr._id}>
-                                        {cr.name} {cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <FormCombobox
+                            items={classRooms}
+                            value={form.classRoomId}
+                            onValueChange={v => f("classRoomId", v)}
+                            placeholder="Select classroom"
+                            renderItem={cr => `${cr.name} ${cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}`}
+                            getItemValue={cr => cr._id}
+                        />
                     </div>
 
                     {/* Teacher */}
                     <div className="flex flex-col gap-1">
                         <Label>Teacher *</Label>
-                        <Select value={form.teacherId} onValueChange={v => f("teacherId", v)}>
-                            <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
-                            <SelectContent>
-                                {teachers.map(t => (
-                                    <SelectItem key={t._id} value={t._id}>
-                                        {t.firstName} {t.lastName}
-                                        {t.specialization?.length ? ` — ${t.specialization[0]}` : ""}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <FormCombobox
+                            items={teachers}
+                            value={form.teacherId}
+                            onValueChange={v => f("teacherId", v)}
+                            placeholder="Select teacher"
+                            renderItem={t => `${t.firstName} ${t.lastName}`}
+                            getItemValue={t => t._id}
+                        />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -169,10 +164,14 @@ export default function RoutinesPage() {
                         {/* Day of Week */}
                         <div className="flex flex-col gap-1">
                             <Label>Day *</Label>
-                            <Select value={form.dayOfWeek} onValueChange={v => f("dayOfWeek", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{DAY_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={DAY_OPTIONS}
+                                value={form.dayOfWeek}
+                                onValueChange={v => f("dayOfWeek", v)}
+                                placeholder="Select day"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
 
                         {/* Start Time */}
@@ -196,10 +195,14 @@ export default function RoutinesPage() {
                         {/* Status */}
                         <div className="flex flex-col gap-1">
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={STATUS_OPTIONS}
+                                value={form.status}
+                                onValueChange={v => f("status", v)}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                     </div>
 

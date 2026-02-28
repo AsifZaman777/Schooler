@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useTeachers } from "@/hooks/useTeachers";
 import { Department, Teacher } from "@/types/viewModels";
@@ -94,23 +94,25 @@ export default function DepartmentsPage() {
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div>
                             <Label>Head of Department</Label>
-                            <Select value={form.headOfDepartment} onValueChange={v => f("headOfDepartment", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
-                                <SelectContent>
-                                    {teachers.map(teacher => (
-                                        <SelectItem key={teacher._id} value={teacher._id}>
-                                            {teacher.firstName} {teacher.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={teachers}
+                                value={form.headOfDepartment}
+                                onValueChange={v => f("headOfDepartment", v)}
+                                placeholder="Select teacher"
+                                renderItem={teacher => teacher.firstName + " " + teacher.lastName}
+                                getItemValue={teacher => teacher._id}
+                            />
                         </div>
                         <div>
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v)}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
