@@ -17,6 +17,7 @@ interface FormComboboxProps<T> {
     placeholder: string;
     renderItem: (item: T) => React.ReactNode;
     getItemValue: (item: T) => string;
+    getItemLabel?: (item: T) => string;
     emptyText?: string;
     required?: boolean;
     disabled?: boolean;
@@ -30,11 +31,19 @@ export function FormCombobox<T>({
     placeholder,
     renderItem,
     getItemValue,
+    getItemLabel,
     emptyText = "No items found.",
     required,
     disabled,
     className,
 }: FormComboboxProps<T>) {
+    const itemToStringLabel = getItemLabel
+        ? (id: string) => {
+            const found = items.find(i => getItemValue(i) === id);
+            return found ? getItemLabel(found) : id;
+        }
+        : undefined;
+
     return (
         <div className={className}>
             <Combobox
@@ -42,13 +51,17 @@ export function FormCombobox<T>({
                 value={value}
                 onValueChange={onValueChange}
                 disabled={disabled}
+                itemToStringLabel={itemToStringLabel}
             >
                 <ComboboxInput placeholder={placeholder} required={required} disabled={disabled} />
                 <ComboboxContent>
                     <ComboboxEmpty>{emptyText}</ComboboxEmpty>
                     <ComboboxList>
                         {(item: T) => (
-                            <ComboboxItem key={getItemValue(item)} value={getItemValue(item)}>
+                            <ComboboxItem
+                                key={getItemValue(item)}
+                                value={getItemValue(item)}
+                            >
                                 {renderItem(item)}
                             </ComboboxItem>
                         )}

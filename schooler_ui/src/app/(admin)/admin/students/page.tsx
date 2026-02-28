@@ -197,6 +197,7 @@ export default function StudentsPage() {
                                 placeholder="Select gender"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                                 required
                             />
                         </div>
@@ -222,6 +223,7 @@ export default function StudentsPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div className="col-span-2">
@@ -235,6 +237,7 @@ export default function StudentsPage() {
                                 onValueChange={v => f("parentId", v ?? "")}
                                 placeholder="Select parent"
                                 getItemValue={p => p._id}
+                                getItemLabel={p => `${p.firstName} ${p.lastName}`}
                                 renderItem={p => (
                                     <>
                                         {p.parentId ? <span className="font-mono text-xs text-blue-600 mr-2">{p.parentId}</span> : null}
@@ -251,6 +254,7 @@ export default function StudentsPage() {
                                 onValueChange={v => f("classRoomId", v ?? "")}
                                 placeholder="Select classroom"
                                 getItemValue={c => c._id}
+                                getItemLabel={c => `${c.name} - ${c.roomNumber}`}
                                 renderItem={c => `${c.name} - ${c.roomNumber}`}
                             />
                         </div>
