@@ -10,7 +10,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useDepartments } from "@/hooks/useDepartments";
 import { Employee } from "@/types/viewModels";
@@ -171,10 +171,14 @@ export default function EmployeesPage() {
                         ))}
                         <div>
                             <Label>Gender *</Label>
-                            <Select value={form.gender} onValueChange={v => f("gender", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{genderOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={genderOptions}
+                                value={form.gender}
+                                onValueChange={v => f("gender", v)}
+                                placeholder="Select gender"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                     </div>
                     <div className="col-span-2 pt-2"><Label className="font-semibold">Address</Label></div>
@@ -190,17 +194,25 @@ export default function EmployeesPage() {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label>Position / Role *</Label>
-                            <Select value={form.position} onValueChange={v => f("position", v)} required>
-                                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
-                                <SelectContent>{positionOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={positionOptions}
+                                value={form.position}
+                                onValueChange={v => f("position", v)}
+                                placeholder="Select role"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         <div>
                             <Label>Department *</Label>
-                            <Select value={form.department} onValueChange={v => f("department", v)} required>
-                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                                <SelectContent>{departments.map(d => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={departments}
+                                value={form.department}
+                                onValueChange={v => f("department", v)}
+                                placeholder="Select department"
+                                renderItem={dept => dept.name}
+                                getItemValue={dept => dept._id}
+                            />
                         </div>
                         {employmentFields.map(field => (
                             <div key={field.key}>
@@ -210,10 +222,14 @@ export default function EmployeesPage() {
                         ))}
                         <div>
                             <Label>Status *</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v)}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                     </div>
                     <div className="col-span-2 pt-2"><Label className="font-semibold">Emergency Contact</Label></div>

@@ -9,14 +9,13 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { Teacher, Department } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
-
 type TF = {
     firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string;
     qualification: string; specialization: string; experience: string; joiningDate: string; salary: string; status: string;
@@ -174,14 +173,15 @@ export default function TeachersPage() {
                         ))}
                         <div>
                             <Label>Gender*</Label>
-                            <Select value={form.gender} onValueChange={v => f("gender", v)} required>
-                                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                <SelectContent>
-                                    {genderOptions.map(opt => (
-                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={genderOptions}
+                                value={form.gender}
+                                onValueChange={v => f("gender", v ?? "")}
+                                placeholder="Select gender"
+                                required
+                                getItemValue={opt => opt.value}
+                                renderItem={opt => opt.label}
+                            />
                         </div>
                         {teacherFields.map(field => (
                             <div key={field.key}>
@@ -197,27 +197,25 @@ export default function TeachersPage() {
                         ))}
                         <div>
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                <SelectContent>
-                                    {statusOptions.map(opt => (
-                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v ?? "")}
+                                placeholder="Select status"
+                                getItemValue={opt => opt.value}
+                                renderItem={opt => opt.label}
+                            />
                         </div>
                         <div>
                             <Label>Department</Label>
-                            <Select value={form.departmentId} onValueChange={v => f("departmentId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(dept => (
-                                        <SelectItem key={dept._id} value={dept._id}>
-                                            {dept.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={departments}
+                                value={form.departmentId}
+                                onValueChange={v => f("departmentId", v ?? "")}
+                                placeholder="Select department"
+                                getItemValue={dept => dept._id}
+                                renderItem={dept => dept.name}
+                            />
                         </div>
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
                         {addressFields.map(field => (
