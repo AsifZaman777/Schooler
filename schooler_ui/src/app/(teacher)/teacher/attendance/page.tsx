@@ -28,8 +28,8 @@ const statusOptions = [
 ];
 
 export default function TeacherAttendancePage() {
-    const { referenceId } = useAuth();
-    const { attendances, loading: histLoading, fetchAttendances, createAttendance } = useAttendance();
+    const { referenceId, user } = useAuth();
+    const { attendances, loading: histLoading, fetchAttendances, createAttendance } = useAttendance({}, false);
     const { students, fetchStudents, loading: studLoading } = useStudents({}, false);
     const { classRooms: assignedClassRooms } = useClassRooms({}, true, referenceId ?? undefined);
 
@@ -86,6 +86,9 @@ export default function TeacherAttendancePage() {
                 date: attendanceDate,
                 status: markStatus,
                 ...(markRemarks ? { remarks: markRemarks } : {}),
+                ...(user ? {
+                    markedBy: user.role,
+                } : {}),
             });
             toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
             setMarkingStudent(null);
