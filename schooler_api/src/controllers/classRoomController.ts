@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ClassRoom } from "../models/ClassRoom";
 import { Student } from "../models/Student";
+import { Routine } from "../models/Routine";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../middlewares/errorHandler";
 import { nextSequence } from "../models/Counter";
@@ -126,6 +127,28 @@ export const getClassRoomStudents = asyncHandler(
     res.status(200).json({
       success: true,
       data: students,
+    });
+  },
+);
+
+export const getClassRoomsByTeacher = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { teacherId } = req.params;
+
+    const classRoomIds = await Routine.distinct("classRoomId", {
+      teacherId,
+      status: "active",
+    });
+
+    const classRooms = await ClassRoom.find({ _id: { $in: classRoomIds } })
+      .populate("departmentId", "name code")
+      .populate("courseId", "name code credits")
+      .sort("name")
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: classRooms,
     });
   },
 );

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Student, Pagination } from "@/types/viewModels";
 
-export function useStudents(initialParams = {}) {
+export function useStudents(initialParams = {}, autoFetch = true) {
   const [students, setStudents] = useState<Student[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,8 +30,8 @@ export function useStudents(initialParams = {}) {
   );
 
   useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
+    if (autoFetch) fetchStudents();
+  }, [fetchStudents, autoFetch]);
 
   const createStudent = async (payload: Partial<Student>) => {
     const res = await api.post("/students", payload);

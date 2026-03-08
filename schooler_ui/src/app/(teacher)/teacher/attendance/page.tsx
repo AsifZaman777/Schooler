@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
@@ -13,9 +13,8 @@ import { toast } from "@/lib/toast";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useStudents } from "@/hooks/useStudents";
 import { useClassRooms } from "@/hooks/useClassRooms";
-import { useRoutines } from "@/hooks/useRoutines";
 import { useAuth } from "@/hooks/useAuth";
-import { Attendance, Student, ClassRoom } from "@/types/viewModels";
+import { Attendance, Student } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 import { ClipboardList, History } from "lucide-react";
 
@@ -31,9 +30,8 @@ const statusOptions = [
 export default function TeacherAttendancePage() {
     const { referenceId } = useAuth();
     const { attendances, loading: histLoading, fetchAttendances, createAttendance } = useAttendance();
-    const { students, fetchStudents, loading: studLoading } = useStudents();
-    const { classRooms } = useClassRooms();
-    const { routines, fetchRoutines } = useRoutines();
+    const { students, fetchStudents, loading: studLoading } = useStudents({}, false);
+    const { classRooms: assignedClassRooms } = useClassRooms({}, true, referenceId ?? undefined);
 
     const [activeTab, setActiveTab] = useState<"mark" | "history">("mark");
     const [selectedClassRoomId, setSelectedClassRoomId] = useState<string>("");
@@ -45,33 +43,9 @@ export default function TeacherAttendancePage() {
     const [historyClassRoomId, setHistoryClassRoomId] = useState<string>("");
     const [busy, setBusy] = useState(false);
 
-    // Fetch only this teacher's routines to derive their assigned classrooms
+    // Auto-select first classroom once available
     useEffect(() => {
-        if (referenceId) fetchRoutines({ teacherId: referenceId, limit: 200 });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [referenceId]);
-
-    // Derive unique assigned classroom IDs from routines
-    const assignedClassIds = useMemo(() => {
-        const ids = new Set<string>();
-        routines.forEach(r => {
-            const id = typeof r.classRoomId === "object"
-                ? (r.classRoomId as ClassRoom)._id
-                : r.classRoomId;
-            if (id) ids.add(id);
-        });
-        return ids;
-    }, [routines]);
-
-    // Filter classRooms list to only assigned ones
-    const assignedClassRooms = useMemo(
-        () => classRooms.filter(cr => assignedClassIds.has(cr._id)),
-        [classRooms, assignedClassIds]
-    );
-
-    // Auto-select first assigned classroom once available
-    useEffect(() => {
-        if (!selectedClassRoomId && assignedClassRooms.length > 0) {
+        if (assignedClassRooms.length > 0 && !selectedClassRoomId) {
             setSelectedClassRoomId(assignedClassRooms[0]._id);
             setHistoryClassRoomId(assignedClassRooms[0]._id);
         }
@@ -178,7 +152,7 @@ export default function TeacherAttendancePage() {
                             </div>
                         </div>
                         {studLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loadingâ€¦</div>
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                             : <DataTable data={students} columns={studentColumns} title="Students" exportFilename="students" />}
                     </div>
                 )}
@@ -207,7 +181,7 @@ export default function TeacherAttendancePage() {
                             <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
                         </div>
                         {histLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loadingâ€¦</div>
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
                             : <DataTable data={attendances} columns={historyColumns} title="Attendance History" exportFilename="teacher-attendance-history" />}
                     </div>
                 )}
@@ -217,7 +191,7 @@ export default function TeacherAttendancePage() {
             <FormDialog
                 open={!!markingStudent}
                 onClose={() => setMarkingStudent(null)}
-                title={markingStudent ? `Mark Attendance â€” ${markingStudent.firstName} ${markingStudent.lastName}` : ""}
+                title={markingStudent ? `Mark Attendance – ${markingStudent.firstName} ${markingStudent.lastName}` : ""}
             >
                 <div className="space-y-4">
                     <div className="flex flex-col gap-1">
@@ -239,7 +213,7 @@ export default function TeacherAttendancePage() {
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>Cancel</Button>
-                        <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>{busy ? "Savingâ€¦" : "Submit"}</Button>
+                        <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>{busy ? "Saving…" : "Submit"}</Button>
                     </div>
                 </div>
             </FormDialog>
