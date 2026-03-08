@@ -35,8 +35,8 @@ export const getAllRoutines = asyncHandler(
 
     const [routines, total] = await Promise.all([
       Routine.find(filter)
-        .populate("classRoomId", "name roomNumber")
-        .populate("teacherId", "firstName lastName email")
+        .populate("classRoomId", "classRoomId name roomNumber")
+        .populate("teacherId", "teacherId firstName lastName email")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -56,8 +56,11 @@ export const getAllRoutines = asyncHandler(
 export const getRoutineById = asyncHandler(
   async (req: Request, res: Response) => {
     const routine = await Routine.findById(req.params.id)
-      .populate("classRoomId", "name roomNumber departmentId courseId")
-      .populate("teacherId", "firstName lastName email phone");
+      .populate(
+        "classRoomId",
+        "classRoomId name roomNumber departmentId courseId",
+      )
+      .populate("teacherId", "teacherId firstName lastName email phone");
 
     if (!routine) {
       throw new AppError(404, "Routine not found");
@@ -76,7 +79,7 @@ export const getRoutineByClassRoom = asyncHandler(
       classRoomId: req.params.classRoomId,
       status: "active",
     })
-      .populate("teacherId", "firstName lastName email")
+      .populate("teacherId", "teacherId firstName lastName email")
       .sort("dayOfWeek startTime");
 
     // Group by day of week
@@ -102,7 +105,7 @@ export const getRoutineByTeacher = asyncHandler(
       teacherId: req.params.teacherId,
       status: "active",
     })
-      .populate("classRoomId", "name roomNumber")
+      .populate("classRoomId", "classRoomId name roomNumber")
       .sort("dayOfWeek startTime");
 
     // Group by day of week

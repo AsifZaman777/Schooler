@@ -50,6 +50,14 @@ export function useRoutines(initialParams = {}) {
     await fetchRoutines();
   };
 
+  const fetchRoutinesByTeacher = useCallback(
+    async (teacherId: string): Promise<Record<string, Routine[]>> => {
+      const res = await api.get(`/routines/teacher/${teacherId}`);
+      return res.data.data as Record<string, Routine[]>;
+    },
+    [],
+  );
+
   return {
     routines,
     pagination,
@@ -59,5 +67,6 @@ export function useRoutines(initialParams = {}) {
     createRoutine,
     updateRoutine,
     deleteRoutine,
+    fetchRoutinesByTeacher,
   };
 }
