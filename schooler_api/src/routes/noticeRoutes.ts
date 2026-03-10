@@ -10,6 +10,7 @@ router.post(
   validateRequest(createNoticeSchema),
   noticeController.createNotice,
 );
+router.get("/teacher/:teacherId", noticeController.getNoticesByTeacherId);
 router.get("/", noticeController.getAllNotices);
 router.get("/active", noticeController.getActiveNotices);
 router.get("/:id", noticeController.getNoticeById);

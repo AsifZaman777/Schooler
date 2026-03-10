@@ -1,5 +1,5 @@
 "use client";
-import { LayoutDashboard, Clock, CalendarCheck, FilePen, Users, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Clock, CalendarCheck, FilePen, Users, ClipboardCheck, Bell } from "lucide-react";
 import { AppSidebar } from "./Sidebar";
 
 export function TeacherSidebar() {
@@ -24,7 +24,7 @@ export function TeacherSidebar() {
                         { label: "Exam Marks", href: "/teacher/exams/marks", icon: ClipboardCheck },
                     ],
                 },
-
+                { label: "Notices", href: "/teacher/notices", icon: Bell },
             ]}
         />
     );
