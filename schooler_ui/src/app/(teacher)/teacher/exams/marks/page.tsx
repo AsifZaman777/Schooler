@@ -17,19 +17,8 @@ import { toast } from "@/lib/toast";
 import { Save, CheckCircle2, XCircle, Loader2, ClipboardList } from "lucide-react";
 import api from "@/lib/axios";
 
-function computeGrade(obtained: number, total: number): string {
-    const pct = total > 0 ? (obtained / total) * 100 : 0;
-    if (pct >= 90) return "A+";
-    if (pct >= 80) return "A";
-    if (pct >= 70) return "B";
-    if (pct >= 60) return "C";
-    if (pct >= 50) return "D";
-    return "F";
-}
-
 type MarkRow = {
     marksObtained: string;
-    grade: string;
     remarks: string;
     status: "pending" | "evaluated" | "published";
     existingId?: string;
@@ -44,12 +33,11 @@ type StudentMarkRow = {
     email: string;
     marksNum: number;
     marksStr: string;
-    grade: string;
     remarks: string;
     status: MarkRow["status"];
     existingId?: string;
     saved: boolean;
-    result: "Pass" | "Fail" | "";
+    result: "Pass" | "Fail" | "Invalid" | "";
 };
 
 const statusOptions: { value: MarkRow["status"]; label: string }[] = [
@@ -57,16 +45,6 @@ const statusOptions: { value: MarkRow["status"]; label: string }[] = [
     { value: "evaluated", label: "Evaluated" },
     { value: "published", label: "Published" },
 ];
-
-const gradeBadge = (grade: string) => (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${grade === "A+" || grade === "A" ? "bg-emerald-50 text-emerald-700" :
-        grade === "B" ? "bg-blue-50 text-blue-700" :
-            grade === "C" ? "bg-amber-50 text-amber-700" :
-                grade === "D" ? "bg-orange-50 text-orange-700" :
-                    grade === "F" ? "bg-rose-50 text-rose-700" :
-                        "bg-[--muted] text-[--muted-foreground]"
-        }`}>{grade || "—"}</span>
-);
 
 export default function TeacherExamMarksPage() {
     const { referenceId } = useAuth();
@@ -128,7 +106,6 @@ export default function TeacherExamMarksPage() {
     // Merge students with existing marks into rows state
     useEffect(() => {
         if (!selectedExamId || students.length === 0) { setRows({}); return; }
-        const examTotalMarks = selectedExam?.totalMarks ?? 100;
         const next: Record<string, MarkRow> = {};
         students.forEach(s => {
             const existing = marks.find(m => {
@@ -140,7 +117,6 @@ export default function TeacherExamMarksPage() {
             if (existing) {
                 next[s._id] = {
                     marksObtained: String(existing.marksObtained),
-                    grade: existing.grade ?? computeGrade(existing.marksObtained, examTotalMarks),
                     remarks: existing.remarks ?? "",
                     status: existing.status,
                     existingId: existing._id,
@@ -149,7 +125,6 @@ export default function TeacherExamMarksPage() {
             } else {
                 next[s._id] = {
                     marksObtained: "",
-                    grade: "",
                     remarks: "",
                     status: "evaluated",
                     saved: false,
@@ -163,12 +138,6 @@ export default function TeacherExamMarksPage() {
     function updateRow(studentId: string, field: keyof MarkRow, value: string) {
         setRows(prev => {
             const row = { ...prev[studentId], [field]: value, saved: false };
-            if (field === "marksObtained") {
-                const num = Number(value);
-                row.grade = !isNaN(num) && value !== ""
-                    ? computeGrade(num, selectedExam?.totalMarks ?? 100)
-                    : "";
-            }
             return { ...prev, [studentId]: row };
         });
     }
@@ -179,8 +148,10 @@ export default function TeacherExamMarksPage() {
             const row = rows[s._id];
             const marksStr = row?.marksObtained ?? "";
             const marksNum = marksStr !== "" ? Number(marksStr) : NaN;
-            const passing = !isNaN(marksNum) && marksNum >= (selectedExam?.passingMarks ?? Infinity);
-            const failing = !isNaN(marksNum) && marksNum < (selectedExam?.passingMarks ?? Infinity);
+            const total = selectedExam?.totalMarks ?? Infinity;
+            const passing = selectedExam != null && !isNaN(marksNum) && marksNum >= 0 && marksNum <= total && marksNum >= selectedExam.passingMarks;
+            const failing = selectedExam != null && !isNaN(marksNum) && marksNum >= 0 && marksNum <= total && marksNum < selectedExam.passingMarks;
+            const invalid = !isNaN(marksNum) && (marksNum < 0 || marksNum > total);
             return {
                 _id: s._id,
                 studentId: s.studentId,
@@ -189,12 +160,11 @@ export default function TeacherExamMarksPage() {
                 email: s.email,
                 marksNum,
                 marksStr,
-                grade: row?.grade ?? "",
                 remarks: row?.remarks ?? "",
                 status: row?.status ?? "evaluated",
                 existingId: row?.existingId,
                 saved: row?.saved ?? false,
-                result: passing ? "Pass" : failing ? "Fail" : "",
+                result: passing ? "Pass" : failing ? "Fail" : invalid ? "Invalid" : "",
             };
         }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -232,10 +202,6 @@ export default function TeacherExamMarksPage() {
                     className="h-8 text-xs w-24"
                 />
             ),
-        },
-        {
-            id: "grade", accessorKey: "grade", header: "Grade",
-            cell: ({ getValue }) => gradeBadge(String(getValue() ?? "")),
         },
         {
             id: "remarks", accessorKey: "remarks", header: "Remarks",
@@ -276,6 +242,11 @@ export default function TeacherExamMarksPage() {
                         </span>
                     )}
                     {r.result === "" && <span className="text-[--muted-foreground] text-xs">—</span>}
+                    {r.result === "Invalid" && (
+                        <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
+                            <XCircle size={13} />Invalid
+                        </span>
+                    )}
                     {r.saved && <Badge variant="secondary" className="text-[10px] px-1 py-0">saved</Badge>}
                 </div>
             ),
@@ -303,7 +274,6 @@ export default function TeacherExamMarksPage() {
                 examId: selectedExamId,
                 studentId: s._id,
                 marksObtained: obtained,
-                grade: row.grade || computeGrade(obtained, total),
                 remarks: row.remarks,
                 status: row.status,
             };
