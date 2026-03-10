@@ -50,5 +50,54 @@ export function useExamMarks() {
     await api.delete(`/exams/marks/${id}`);
   };
 
-  return { marks, loading, fetchMarks, createMark, updateMark, deleteMark };
+  const fetchMarksByClassRoom = useCallback(
+    async (classRoomId: string, params: Record<string, unknown> = {}) => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/exams/marks/classroom/${classRoomId}`, {
+          params: { page: 1, limit: 200, ...params },
+        });
+        return res.data.data as ExamMark[];
+      } catch {
+        return [];
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const fetchMarksByClassRooms = useCallback(
+    async (classRoomIds: string[], params: Record<string, unknown> = {}) => {
+      setLoading(true);
+      try {
+        const promises = classRoomIds.map((id) =>
+          api.get(`/exams/marks/classroom/${id}`, {
+            params: { page: 1, limit: 200, ...params },
+          }),
+        );
+        const results = await Promise.all(promises);
+        const allMarks = results.flatMap((res) => res.data.data);
+        setMarks(allMarks);
+        return allMarks;
+      } catch {
+        setMarks([]);
+        return [];
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  return {
+    marks,
+    loading,
+    fetchMarks,
+    createMark,
+    updateMark,
+    deleteMark,
+    fetchMarksByClassRoom,
+    fetchMarksByClassRooms,
+  };
 }

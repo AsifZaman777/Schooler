@@ -17,6 +17,10 @@ router.post(
   examController.createExamMark,
 );
 router.get("/marks", examController.getAllExamMarks);
+router.get(
+  "/marks/classroom/:classRoomId",
+  examController.getExamMarksByClassRoom,
+);
 router.get("/marks/student/:studentId", examController.getStudentExamResults);
 router.get("/marks/:id", examController.getExamMarkById);
 router.put(

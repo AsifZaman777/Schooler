@@ -259,3 +259,41 @@ export const getStudentExamResults = asyncHandler(
     });
   },
 );
+
+export const getExamMarksByClassRoom = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { classRoomId } = req.params;
+    const { page, limit, sortBy, sortOrder } = getPaginationParams(req.query);
+    const { status } = req.query;
+
+    // First, find all exams for this classroom
+    const exams = await Exam.find({ classRoomId }).select("_id").lean();
+    const examIds = exams.map((exam) => exam._id);
+
+    // Build filter for exam marks
+    const filter: any = { examId: { $in: examIds } };
+    if (status) filter.status = status;
+
+    const skip = (page - 1) * limit;
+    const sortOptions: any = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+    const [examMarks, total] = await Promise.all([
+      ExamMark.find(filter)
+        .populate("examId", "name examType totalMarks passingMarks date")
+        .populate("studentId", "firstName lastName email studentId")
+        .populate("evaluatedBy", "firstName lastName")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ExamMark.countDocuments(filter),
+    ]);
+
+    const result = createPaginationResult(examMarks, total, page, limit);
+
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  },
+);
