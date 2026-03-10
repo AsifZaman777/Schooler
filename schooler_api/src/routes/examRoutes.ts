@@ -29,6 +29,7 @@ router.delete("/marks/:id", examController.deleteExamMark);
 // Exam routes
 router.post("/", validateRequest(createExamSchema), examController.createExam);
 router.get("/", examController.getAllExams);
+router.get("/classroom/:classRoomId", examController.getExamsByClassRoom);
 router.get("/:id", examController.getExamById);
 router.put(
   "/:id",

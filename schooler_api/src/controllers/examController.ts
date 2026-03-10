@@ -71,6 +71,44 @@ export const getExamById = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const getExamsByClassRoom = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { classRoomId } = req.params;
+    const { page, limit, sortBy, sortOrder } = getPaginationParams(req.query);
+    const { examType, status, startDate, endDate } = req.query;
+
+    const filter: any = { classRoomId };
+    if (examType) filter.examType = examType;
+    if (status) filter.status = status;
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate as string);
+      if (endDate) filter.date.$lte = new Date(endDate as string);
+    }
+
+    const skip = (page - 1) * limit;
+    const sortOptions: any = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+    const [exams, total] = await Promise.all([
+      Exam.find(filter)
+        .populate("courseId", "name code")
+        .populate("classRoomId", "name roomNumber")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Exam.countDocuments(filter),
+    ]);
+
+    const result = createPaginationResult(exams, total, page, limit);
+
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  },
+);
+
 export const updateExam = asyncHandler(async (req: Request, res: Response) => {
   const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
