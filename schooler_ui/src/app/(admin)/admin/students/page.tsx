@@ -108,7 +108,12 @@ export default function StudentsPage() {
             if (editing) { await updateStudent(editing._id, payload); toast.success("Student updated"); }
             else { await createStudent(payload); toast.success("Student added"); }
             setOpen(false);
-        } catch { toast.error("Failed to save"); } finally { setBusy(false); }
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ?? err?.message ?? "Something went wrong";
+            toast.error(message);
+        }
+        finally { setBusy(false); }
     }
     async function handleDelete() {
         if (!confirm) return; setBusy(true);
