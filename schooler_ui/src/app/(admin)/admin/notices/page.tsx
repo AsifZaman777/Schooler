@@ -85,7 +85,14 @@ export default function NoticesPage() {
         e.preventDefault(); setBusy(true);
         try {
             const payload = { ...form };
-            if (editing) { await updateNotice(editing._id, payload); toast.success("Notice updated"); }
+            if (editing) {
+                await updateNotice(editing._id, {
+                    ...payload,
+                    modifiedBy: user?.referenceId,
+                    modifiedByModel: "Employee",
+                });
+                toast.success("Notice updated");
+            }
             else { await createNotice(payload); toast.success("Notice published"); }
             setOpen(false);
         } catch { toast.error("Failed to save"); } finally { setBusy(false); }
@@ -113,6 +120,13 @@ export default function NoticesPage() {
         { id: "targetAudience", header: "Audience", accessorFn: r => Array.isArray(r.targetAudience) ? r.targetAudience.join(", ") : String(r.targetAudience) },
         { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },
         { id: "createdBy", header: "Created By", accessorFn: r => typeof r.createdBy === "string" ? r.createdBy : `${(r.createdBy as any)?.firstName ?? ""} ${(r.createdBy as any)?.lastName ?? ""}`.trim() || "—" },
+        {
+            id: "modifiedBy", header: "Modified By", accessorFn: r => {
+                if (!r.modifiedBy) return "—";
+                if (typeof r.modifiedBy === "object") return `${(r.modifiedBy as any).firstName ?? ""} ${(r.modifiedBy as any).lastName ?? ""}`.trim() || "—";
+                return r.modifiedBy;
+            }
+        },
         { id: "publishDate", header: "Published", accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—" },
         { id: "expiryDate", header: "Expires", accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—" },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>{String(getValue())}</Badge> },

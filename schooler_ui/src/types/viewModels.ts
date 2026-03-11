@@ -313,6 +313,8 @@ export interface Notice {
   expiryDate?: string;
   attachments?: string[];
   createdBy: string | Employee;
+  modifiedBy?: string | Employee;
+  modifiedByModel?: "Teacher" | "Employee";
   status: "draft" | "published" | "archived";
   priority: "low" | "medium" | "high";
   createdAt: string;

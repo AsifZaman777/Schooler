@@ -117,7 +117,11 @@ export default function TeacherNoticesPage() {
         try {
             const payload = { ...form };
             if (editing) {
-                await updateNotice(editing._id, payload);
+                await updateNotice(editing._id, {
+                    ...payload,
+                    modifiedBy: user?.referenceId,
+                    modifiedByModel: "Teacher",
+                });
                 toast.success("Notice updated");
             } else {
                 await createNotice(payload);
@@ -190,6 +194,15 @@ export default function TeacherNoticesPage() {
                 if (typeof cb === "object" && cb !== null)
                     return `${(cb as any).firstName ?? ""} ${(cb as any).lastName ?? ""}`.trim();
                 return cb ?? "—";
+            },
+        },
+        {
+            id: "modifiedBy", header: "Modified By",
+            accessorFn: r => {
+                if (!r.modifiedBy) return "—";
+                if (typeof r.modifiedBy === "object")
+                    return `${(r.modifiedBy as any).firstName ?? ""} ${(r.modifiedBy as any).lastName ?? ""}`.trim() || "—";
+                return r.modifiedBy;
             },
         },
         {

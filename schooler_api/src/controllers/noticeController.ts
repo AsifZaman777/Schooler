@@ -36,6 +36,7 @@ export const getAllNotices = asyncHandler(
     const [notices, total] = await Promise.all([
       Notice.find(filter)
         .populate("createdBy", "firstName lastName email")
+        .populate("modifiedBy", "firstName lastName email")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -70,6 +71,7 @@ export const getNoticesByTeacherId = asyncHandler(
     const [notices, total] = await Promise.all([
       Notice.find(filter)
         .populate("createdBy", "firstName lastName email")
+        .populate("modifiedBy", "firstName lastName email")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -106,7 +108,12 @@ export const getNoticeById = asyncHandler(
 
 export const updateNotice = asyncHandler(
   async (req: Request, res: Response) => {
-    const notice = await Notice.findByIdAndUpdate(req.params.id, req.body, {
+    const { modifiedBy, modifiedByModel, ...rest } = req.body;
+    const updateData = {
+      ...rest,
+      ...(modifiedBy ? { modifiedBy, modifiedByModel } : {}),
+    };
+    const notice = await Notice.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
