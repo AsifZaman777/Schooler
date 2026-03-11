@@ -28,12 +28,13 @@ type TF = {
     priority: "low" | "medium" | "high";
     status: "draft" | "published" | "archived";
     createdBy: string;
+    createdByModel: "Teacher" | "Employee";
 };
 
 const blank: TF = {
     title: "", content: "", category: "general",
     targetAudience: ["student", "parent"], publishDate: "", expiryDate: "",
-    priority: "medium", status: "draft", createdBy: "",
+    priority: "medium", status: "draft", createdBy: "", createdByModel: "Teacher",
 };
 
 const categoryOptions = [
@@ -60,9 +61,9 @@ const targetAudienceOptions = [
 ];
 
 export default function TeacherNoticesPage() {
-    const { referenceId } = useAuth();
+    const { user } = useAuth();
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } =
-        useTeacherNotices(referenceId);
+        useTeacherNotices(user?.referenceId);
 
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Notice | null>(null);
@@ -85,7 +86,7 @@ export default function TeacherNoticesPage() {
 
     function openAdd() {
         setEditing(null);
-        setForm({ ...blank, createdBy: referenceId ?? "" });
+        setForm({ ...blank, createdBy: user?.referenceId ?? "", createdByModel: "Teacher" });
         setOpen(true);
     }
 
@@ -104,7 +105,8 @@ export default function TeacherNoticesPage() {
             status: n.status,
             createdBy: typeof n.createdBy === "string"
                 ? n.createdBy
-                : (n.createdBy?._id || referenceId || ""),
+                : (n.createdBy?._id || user?.referenceId || ""),
+            createdByModel: (n as any).createdByModel ?? "Teacher",
         });
         setOpen(true);
     }
@@ -122,7 +124,7 @@ export default function TeacherNoticesPage() {
                 toast.success("Notice published");
             }
             setOpen(false);
-        } catch (err:any){
+        } catch (err: any) {
             const message =
                 err?.response?.data?.message ?? err?.message ?? "Something went wrong";
             toast.error(message);
@@ -150,9 +152,12 @@ export default function TeacherNoticesPage() {
         {
             id: "content", accessorKey: "content", header: "Content",
             cell: ({ getValue }) => (
-                <div className="max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap line-clamp-2">
-                    {String(getValue())}
-                </div>
+                <textarea
+                    readOnly
+                    rows={3}
+                    className="w-full resize-none bg-transparent text-sm leading-snug focus:outline-none"
+                    value={String(getValue())}
+                />
             ),
         },
         { id: "category", accessorKey: "category", header: "Category" },
@@ -177,6 +182,15 @@ export default function TeacherNoticesPage() {
         {
             id: "expiryDate", header: "Expires",
             accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—",
+        },
+        {
+            id: "createdBy", header: "Created By",
+            accessorFn: r => {
+                const cb = r.createdBy;
+                if (typeof cb === "object" && cb !== null)
+                    return `${(cb as any).firstName ?? ""} ${(cb as any).lastName ?? ""}`.trim();
+                return cb ?? "—";
+            },
         },
         {
             id: "status", header: "Status", accessorKey: "status",

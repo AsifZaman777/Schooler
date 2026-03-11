@@ -28,8 +28,9 @@ type TF = {
     priority: "low" | "medium" | "high";
     status: "draft" | "published" | "archived";
     createdBy: string;
+    createdByModel: "Teacher" | "Employee";
 };
-const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft", createdBy: "" };
+const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft", createdBy: "", createdByModel: "Employee" };
 
 const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
     { key: "publishDate", label: "Publish Date", type: "date", required: false },
@@ -43,7 +44,7 @@ const targetAudienceOptions = [{ value: "all", label: "All" }, { value: "student
 
 export default function NoticesPage() {
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } = useNotices();
-    const { referenceId } = useAuth();
+    const { user } = useAuth();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Notice | null>(null);
     const [form, setForm] = useState<TF>(blank);
@@ -65,7 +66,7 @@ export default function NoticesPage() {
 
     function openAdd() {
         setEditing(null);
-        setForm({ ...blank, createdBy: referenceId || "" });
+        setForm({ ...blank, createdBy: user?.referenceId || "", createdByModel: "Employee" });
         setOpen(true);
     }
     function openEdit(n: Notice) {
@@ -75,7 +76,8 @@ export default function NoticesPage() {
             targetAudience: Array.isArray(n.targetAudience) ? n.targetAudience : [n.targetAudience as "student" | "parent" | "teacher" | "employee" | "all"],
             publishDate: n.publishDate?.slice(0, 10) ?? "", expiryDate: n.expiryDate?.slice(0, 10) ?? "",
             priority: n.priority, status: n.status,
-            createdBy: typeof n.createdBy === 'string' ? n.createdBy : (n.createdBy?._id || referenceId || "") //hiddenly submit the created by
+            createdBy: typeof n.createdBy === 'string' ? n.createdBy : (n.createdBy?._id || user?.referenceId || ""),
+            createdByModel: (n as any).createdByModel ?? "Employee",
         });
         setOpen(true);
     }
@@ -96,7 +98,17 @@ export default function NoticesPage() {
 
     const columns: ColumnDef<Notice, unknown>[] = [
         { id: "title", accessorKey: "title", header: "Title" },
-        { id: "content", accessorKey: "content", header: "Content", cell: ({ getValue }) => <div className="max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap">{String(getValue())}</div> },
+        {
+            id: "content", accessorKey: "content", header: "Content",
+            cell: ({ getValue }) => (
+                <textarea
+                    readOnly
+                    rows={3}
+                    className="w-full resize-none bg-transparent text-sm leading-snug focus:outline-none"
+                    value={String(getValue())}
+                />
+            )
+        },
         { id: "category", accessorKey: "category", header: "Category" },
         { id: "targetAudience", header: "Audience", accessorFn: r => Array.isArray(r.targetAudience) ? r.targetAudience.join(", ") : String(r.targetAudience) },
         { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },

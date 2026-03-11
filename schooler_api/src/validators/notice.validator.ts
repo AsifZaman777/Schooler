@@ -19,6 +19,7 @@ export const createNoticeSchema = z.object({
     expiryDate: z.string().or(z.date()).optional(),
     attachments: z.array(z.string()).optional(),
     createdBy: z.string().min(1, "Creator is required"),
+    createdByModel: z.enum(["Teacher", "Employee"]),
     status: z.enum(["draft", "published", "archived"]).optional(),
     priority: z.enum(["low", "medium", "high"]).optional(),
   }),
