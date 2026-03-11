@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useActiveNotices, useTeacherNotices } from "@/hooks/useNotices";
+import { useActiveNotices } from "@/hooks/useNotices";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -25,20 +25,11 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     const router = useRouter();
 
     const isTeacher = user?.role === "teacher";
-    const teacherNotices = useTeacherNotices(isTeacher ? user?.referenceId : null);
-    const activeNotices = useActiveNotices(isTeacher ? undefined : undefined);
-
-    const { notices, loading: noticesLoading } = isTeacher ? teacherNotices : activeNotices;
+    const { notices, loading: noticesLoading } = useActiveNotices(isTeacher ? "teacher" : undefined);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const userName = user?.name || user?.email || "User";
     const userRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "";
-
-    const getInitials = (name: string) => {
-        const parts = name.split(" ");
-        if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-        return name.substring(0, 2).toUpperCase();
-    };
 
     const handleLogout = async () => {
         await signOut({ redirect: false });
