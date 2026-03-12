@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRoutines } from "@/hooks/useRoutines";
 import { useParents } from "@/hooks/useParents";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,28 +12,26 @@ import { Routine } from "@/types/viewModels";
 
 export default function ParentRoutinesPage() {
     const { referenceId } = useAuth();
-    const { fetchChildren } = useParents({}, false);
-    const { fetchRoutinesByClassRoom } = useRoutines();
-    const [routines, setRoutines] = useState<Routine[]>([]);
-    const [loading, setLoading] = useState(false);
+    const { children, fetchChildren } = useParents({}, false);
+    const { routines, loading, fetchRoutinesByClassRoom } = useRoutines({}, false);
+    const [selectedStudentId, setSelectedStudentId] = useState<string>("");
 
     useEffect(() => {
         if (!referenceId) return;
-        setLoading(true);
-        fetchChildren(referenceId)
-            .then((kids) => {
-                if (kids.length === 0) return;
-                const classRoomId = typeof kids[0].classRoomId === "string"
-                    ? kids[0].classRoomId
-                    : kids[0].classRoomId?._id;
-                if (!classRoomId) return;
-                return fetchRoutinesByClassRoom(classRoomId);
-            })
-            .then((grouped) => {
-                if (grouped) setRoutines(Object.values(grouped).flat());
-            })
-            .finally(() => setLoading(false));
-    }, [referenceId, fetchChildren, fetchRoutinesByClassRoom]);
+        fetchChildren(referenceId).then((kids) => {
+            if (kids.length > 0) setSelectedStudentId(kids[0]._id);
+        });
+    }, [referenceId, fetchChildren]);
+
+    useEffect(() => {
+        if (!selectedStudentId || children.length === 0) return;
+        const student = children.find((c) => c._id === selectedStudentId);
+        if (!student) return;
+        const classRoomId = typeof student.classRoomId === "string"
+            ? student.classRoomId
+            : (student.classRoomId as { _id?: string })?._id;
+        if (classRoomId) fetchRoutinesByClassRoom(classRoomId);
+    }, [selectedStudentId, children, fetchRoutinesByClassRoom]);
 
     const columns: ColumnDef<Routine, unknown>[] = [
         { id: "dayOfWeek", accessorKey: "dayOfWeek", header: "Day" },
@@ -53,11 +52,28 @@ export default function ParentRoutinesPage() {
         },
     ];
 
+    const selectedStudent = children.find((c) => c._id === selectedStudentId);
+
     return (
         <>
             <Header title="My Routines" />
             <main className="p-5 space-y-4">
-                <h2 className="text-base font-semibold text-[--foreground]">Class Schedule</h2>
+                {children.length > 1 && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-[--muted-foreground]">Child:</span>
+                        <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                            <SelectTrigger className="w-52"><SelectValue placeholder="Select child" /></SelectTrigger>
+                            <SelectContent>
+                                {children.map((c) => (
+                                    <SelectItem key={c._id} value={c._id}>{c.firstName} {c.lastName}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+                <h2 className="text-base font-semibold text-[--foreground]">
+                    Class Schedule{selectedStudent ? ` — ${selectedStudent.firstName} ${selectedStudent.lastName}` : ""}
+                </h2>
                 {loading ? (
                     <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
                 ) : (

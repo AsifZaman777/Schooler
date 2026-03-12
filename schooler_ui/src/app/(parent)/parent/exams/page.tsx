@@ -22,10 +22,11 @@ export default function ParentExamsPage() {
         if (!referenceId) return;
         fetchChildren(referenceId).then((kids) => {
             if (kids.length === 0) return;
-            const classRoomId = typeof kids[0].classRoomId === "string"
-                ? kids[0].classRoomId
-                : kids[0].classRoomId?._id;
-            if (classRoomId) fetchExamsByClassRooms([classRoomId]);
+            const classRoomIds = kids
+                .map((k) => typeof k.classRoomId === "string" ? k.classRoomId : (k.classRoomId as { _id?: string })?._id)
+                .filter((id): id is string => Boolean(id));
+            const uniqueIds = [...new Set(classRoomIds)];
+            if (uniqueIds.length > 0) fetchExamsByClassRooms(uniqueIds);
         });
     }, [referenceId, fetchChildren, fetchExamsByClassRooms]);
 
