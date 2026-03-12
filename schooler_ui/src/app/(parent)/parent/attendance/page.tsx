@@ -1,14 +1,26 @@
 "use client";
+import { useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useAttendance } from "@/hooks/useAttendance";
+import { useParents } from "@/hooks/useParents";
+import { useAuth } from "@/hooks/useAuth";
 import { Attendance } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 
 export default function ParentAttendancePage() {
-    const { attendances, loading } = useAttendance();
+    const { referenceId } = useAuth();
+    const { fetchChildren } = useParents({}, false);
+    const { attendances, loading, fetchAttendances } = useAttendance({}, false);
+
+    useEffect(() => {
+        if (!referenceId) return;
+        fetchChildren(referenceId).then((kids) => {
+            if (kids.length > 0) fetchAttendances({ studentId: kids[0]._id });
+        });
+    }, [referenceId, fetchChildren, fetchAttendances]);
 
     const columns: ColumnDef<Attendance, unknown>[] = [
         { id: "student", header: "Student", accessorFn: (r) => { const s = r.studentId as { firstName?: string; lastName?: string }; return s?.firstName ? `${s.firstName} ${s.lastName ?? ""}`.trim() : String(r.studentId); } },

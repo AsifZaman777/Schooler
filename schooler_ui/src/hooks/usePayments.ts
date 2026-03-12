@@ -9,7 +9,7 @@ export interface PaymentStats {
   pendingAmount: number;
 }
 
-export function usePayments(initialParams = {}) {
+export function usePayments(initialParams = {}, autoFetch = true) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [stats, setStats] = useState<PaymentStats | null>(null);
@@ -58,6 +58,19 @@ export function usePayments(initialParams = {}) {
     [],
   );
 
+  const fetchStudentPayments = useCallback(async (studentId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/payments/student/${studentId}`);
+      setPayments(res.data.data.payments);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const fetchStats = useCallback(
     async (params: Record<string, unknown> = {}) => {
       try {
@@ -71,9 +84,11 @@ export function usePayments(initialParams = {}) {
   );
 
   useEffect(() => {
-    fetchPayments();
-    fetchStats();
-  }, [fetchPayments, fetchStats]);
+    if (autoFetch) {
+      fetchPayments();
+      fetchStats();
+    }
+  }, [autoFetch, fetchPayments, fetchStats]);
 
   const createPayment = async (payload: Partial<Payment>) => {
     const res = await api.post("/payments", payload);
@@ -108,6 +123,7 @@ export function usePayments(initialParams = {}) {
     enrollmentsLoading,
     error,
     fetchPayments,
+    fetchStudentPayments,
     fetchEnrollments,
     fetchStats,
     createPayment,

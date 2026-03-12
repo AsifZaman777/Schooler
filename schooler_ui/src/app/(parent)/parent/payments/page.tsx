@@ -1,14 +1,26 @@
 "use client";
+import { useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { usePayments } from "@/hooks/usePayments";
+import { useParents } from "@/hooks/useParents";
+import { useAuth } from "@/hooks/useAuth";
 import { Payment } from "@/types/viewModels";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 export default function ParentPaymentsPage() {
-    const { payments, loading } = usePayments();
+    const { referenceId } = useAuth();
+    const { fetchChildren } = useParents({}, false);
+    const { payments, loading, fetchStudentPayments } = usePayments({}, false);
+
+    useEffect(() => {
+        if (!referenceId) return;
+        fetchChildren(referenceId).then((kids) => {
+            if (kids.length > 0) fetchStudentPayments(kids[0]._id);
+        });
+    }, [referenceId, fetchChildren, fetchStudentPayments]);
 
     const columns: ColumnDef<Payment, unknown>[] = [
         { id: "paymentType", accessorKey: "paymentType", header: "Type" },
@@ -18,7 +30,7 @@ export default function ParentPaymentsPage() {
         { id: "paidDate", header: "Paid Date", accessorFn: (r) => r.paidDate ? formatDate(r.paidDate) : "—" },
         { id: "academicYear", accessorKey: "academicYear", header: "Academic Year" },
         { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "paid" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "status", header: "Status", accessorKey: "paymentStatus", cell: ({ getValue }) => <Badge variant={String(getValue()) === "paid" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     return (
