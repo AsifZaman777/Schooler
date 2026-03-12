@@ -50,6 +50,14 @@ export function useRoutines(initialParams = {}) {
     await fetchRoutines();
   };
 
+  const fetchRoutinesByClassRoom = useCallback(
+    async (classRoomId: string): Promise<Record<string, Routine[]>> => {
+      const res = await api.get(`/routines/classroom/${classRoomId}`);
+      return res.data.data as Record<string, Routine[]>;
+    },
+    [],
+  );
+
   const fetchRoutinesByTeacher = useCallback(
     async (teacherId: string): Promise<Record<string, Routine[]>> => {
       const res = await api.get(`/routines/teacher/${teacherId}`);
@@ -67,6 +75,7 @@ export function useRoutines(initialParams = {}) {
     createRoutine,
     updateRoutine,
     deleteRoutine,
+    fetchRoutinesByClassRoom,
     fetchRoutinesByTeacher,
   };
 }

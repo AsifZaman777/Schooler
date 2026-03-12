@@ -242,7 +242,10 @@ export const getStudentExamResults = asyncHandler(
   async (req: Request, res: Response) => {
     const { studentId } = req.params;
 
-    const results = await ExamMark.find({ studentId, status: "published" })
+    const results = await ExamMark.find({
+      studentId,
+      status: { $in: ["evaluated"] },
+    })
       .populate("examId", "name examType totalMarks passingMarks date courseId")
       .populate({
         path: "examId",

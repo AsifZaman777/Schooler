@@ -90,6 +90,21 @@ export function useExamMarks() {
     [],
   );
 
+  const fetchStudentExamResults = useCallback(async (studentId: string) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/exams/marks/student/${studentId}`);
+      const data: ExamMark[] = res.data.data ?? [];
+      setMarks(data);
+      return data;
+    } catch {
+      setMarks([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     marks,
     loading,
@@ -99,5 +114,6 @@ export function useExamMarks() {
     deleteMark,
     fetchMarksByClassRoom,
     fetchMarksByClassRooms,
+    fetchStudentExamResults,
   };
 }
