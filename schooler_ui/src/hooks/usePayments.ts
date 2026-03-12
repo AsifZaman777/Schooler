@@ -71,6 +71,28 @@ export function usePayments(initialParams = {}, autoFetch = true) {
     }
   }, []);
 
+  const fetchAllChildrenPayments = useCallback(async (studentIds: string[]) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results = await Promise.all(
+        studentIds.map((id) => api.get(`/payments/student/${id}`)),
+      );
+      const allPayments = results.flatMap(
+        (res) => res.data.data.payments ?? [],
+      );
+      allPayments.sort(
+        (a: Payment, b: Payment) =>
+          new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
+      );
+      setPayments(allPayments);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const fetchStats = useCallback(
     async (params: Record<string, unknown> = {}) => {
       try {
@@ -124,6 +146,7 @@ export function usePayments(initialParams = {}, autoFetch = true) {
     error,
     fetchPayments,
     fetchStudentPayments,
+    fetchAllChildrenPayments,
     fetchEnrollments,
     fetchStats,
     createPayment,

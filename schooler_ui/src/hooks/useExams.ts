@@ -52,27 +52,6 @@ export function useExams(initialParams = {}, autoFetch = true) {
     await fetchExams();
   };
 
-  // const fetchExamsByClassRoom = useCallback(
-  //   async (classRoomId: string, params: Record<string, unknown> = {}) => {
-  //     setLoading(true);
-  //     setError(null);
-  //     try {
-  //       const res = await api.get(`/exams/classroom/${classRoomId}`, {
-  //         params: { page: 1, limit: 50, ...params },
-  //       });
-  //       const data = res.data.data as Exam[];
-  //       setExams(data);
-  //       return data;
-  //     } catch (err) {
-  //       setError((err as Error).message);
-  //       return [];
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   },
-  //   [],
-  // );
-
   const fetchExamsByClassRooms = useCallback(
     async (classRoomIds: string[], params: Record<string, unknown> = {}) => {
       setLoading(true);
@@ -106,7 +85,6 @@ export function useExams(initialParams = {}, autoFetch = true) {
     createExam,
     updateExam,
     deleteExam,
-    // fetchExamsByClassRoom,
     fetchExamsByClassRooms,
   };
 }
