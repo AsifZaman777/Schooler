@@ -124,7 +124,7 @@ export function DataTable<T>({
             {/* Toolbar */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-[--border]">
                 <h3 className="text-sm font-semibold text-[--foreground]">{title}</h3>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     {searchable && (
                         <div className="relative">
                             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[--muted-foreground]" />
@@ -132,24 +132,55 @@ export function DataTable<T>({
                                 placeholder="Search…"
                                 value={globalFilter}
                                 onChange={(e) => setGlobalFilter(e.target.value)}
-                                className="pl-8 h-8 w-44 text-xs"
+                                className="pl-8 h-8 w-full sm:w-44 text-xs"
                             />
                         </div>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(getAllRows(), columns, () => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}>
-                        <Copy size={13} /> {copied ? "Copied!" : "Copy"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportCSV(getAllRows(), columns, exportFilename)}>
-                        <Download size={13} /> CSV
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportPDF(getAllRows(), columns, exportFilename, title)}>
-                        <FileText size={13} /> PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => copyToClipboard(getAllRows(), columns, () => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}>
+                            <Copy size={13} /> {copied ? "Copied!" : "Copy"}
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => exportCSV(getAllRows(), columns, exportFilename)}>
+                            <Download size={13} /> CSV
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => exportPDF(getAllRows(), columns, exportFilename, title)}>
+                            <FileText size={13} /> PDF
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile card view */}
+            <div className="sm:hidden divide-y divide-[--border]">
+                {table.getRowModel().rows.length === 0 ? (
+                    <div className="text-center py-8 text-[--muted-foreground] text-sm">No records found</div>
+                ) : (
+                    table.getRowModel().rows.map((row) => (
+                        <div key={row.id} className="p-4 space-y-2">
+                            {row.getVisibleCells().filter((cell) => cell.column.id !== "actions").map((cell) => {
+                                const hdr = cell.column.columnDef.header;
+                                const label = typeof hdr === "string" ? hdr : cell.column.id;
+                                return (
+                                    <div key={cell.id} className="flex items-start justify-between gap-3 text-sm">
+                                        <span className="font-medium text-[--muted-foreground] shrink-0 min-w-22.5">{label}</span>
+                                        <span className="text-right text-[--foreground] break-all">
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                            {row.getVisibleCells().filter((cell) => cell.column.id === "actions").map((cell) => (
+                                <div key={cell.id} className="pt-2 border-t border-[--border] flex justify-end">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </div>
+                            ))}
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden sm:block overflow-x-auto">
                 <table className="dt-table">
                     <thead>
                         {table.getHeaderGroups().map((hg) => (
@@ -190,7 +221,7 @@ export function DataTable<T>({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-[--border] text-sm text-[--muted-foreground]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t border-[--border] text-sm text-[--muted-foreground]">
                 <div className="flex items-center gap-2">
                     <span>Rows per page:</span>
                     <select
@@ -208,19 +239,21 @@ export function DataTable<T>({
                         <option value="all">All</option>
                     </select>
                 </div>
-                <span>
-                    {table.getFilteredRowModel().rows.length} record{table.getFilteredRowModel().rows.length !== 1 && "s"}
-                    {currentPageSize !== Infinity && (
-                        <> &middot; Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</>
-                    )}
-                </span>
-                <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage() || currentPageSize === Infinity}>
-                        <ChevronLeft size={15} />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage() || currentPageSize === Infinity}>
-                        <ChevronRight size={15} />
-                    </Button>
+                <div className="flex items-center justify-between sm:justify-end sm:gap-4">
+                    <span>
+                        {table.getFilteredRowModel().rows.length} record{table.getFilteredRowModel().rows.length !== 1 && "s"}
+                        {currentPageSize !== Infinity && (
+                            <> &middot; Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</>
+                        )}
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage() || currentPageSize === Infinity}>
+                            <ChevronLeft size={15} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage() || currentPageSize === Infinity}>
+                            <ChevronRight size={15} />
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

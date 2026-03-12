@@ -1,6 +1,7 @@
 "use client";
-import { Bell, Menu, LogOut, ChevronDown, Loader2 } from "lucide-react";
+import { Bell, LogOut, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,11 +42,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     return (
         <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
             <div className="flex items-center gap-3">
-                {onMenuClick && (
-                    <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-                        <Menu size={18} />
-                    </Button>
-                )}
+                <SidebarTrigger className="-ml-1" />
                 <h1 className="text-sm font-semibold text-[--foreground]">{title}</h1>
             </div>
 
