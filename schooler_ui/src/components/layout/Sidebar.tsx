@@ -9,7 +9,6 @@ import {
     SidebarGroupContent, SidebarHeader,
     SidebarMenu, SidebarMenuButton, SidebarMenuItem,
     SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
-    SidebarRail, SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -78,11 +77,12 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                         <span className="block text-sm font-bold text-[--sidebar-foreground] truncate">Schooler</span>
                         <span className="block text-[10px] text-[--sidebar-foreground]/50 capitalize">{roleLabel[role]}</span>
                     </div>
-                    <SidebarTrigger className="ml-auto h-7 w-7 text-[--sidebar-foreground]/60 hover:text-[--sidebar-foreground]" />
                 </div>
-                {/* Collapsed — show trigger only */}
+                {/* Collapsed — show logo icon centered */}
                 <div className="hidden group-data-[collapsible=icon]:flex justify-center">
-                    <SidebarTrigger className="h-7 w-7 text-[--sidebar-foreground]/60 hover:text-[--sidebar-foreground]" />
+                    <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-[--sidebar-primary] text-[--sidebar-primary-foreground] font-bold text-sm">
+                        S
+                    </span>
                 </div>
             </SidebarHeader>
 
@@ -144,7 +144,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                                             <child.icon size={14} />
                                                                             <span>{child.label}</span>
                                                                             {child.badge !== undefined && (
-                                                                                <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                                                <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-4.5 text-center">
                                                                                     {child.badge}
                                                                                 </span>
                                                                             )}
@@ -177,7 +177,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                     <item.icon size={16} className="shrink-0" />
                                                     <span>{item.label}</span>
                                                     {item.badge !== undefined && (
-                                                        <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                                        <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-4.5 text-center">
                                                             {item.badge}
                                                         </span>
                                                     )}
@@ -192,7 +192,6 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarRail />
         </Sidebar>
     );
 }
