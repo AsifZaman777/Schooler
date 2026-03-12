@@ -15,7 +15,7 @@ const statusVariant = (s: string) =>
 
 export default function ParentExamsPage() {
     const { referenceId } = useAuth();
-    const { fetchChildren } = useParents({}, false);
+    const { children, fetchChildren } = useParents({}, false);
     const { exams, loading, fetchExamsByClassRooms } = useExams({}, false);
 
     useEffect(() => {
@@ -32,12 +32,37 @@ export default function ParentExamsPage() {
 
     const columns: ColumnDef<Exam, unknown>[] = [
         { id: "name", accessorKey: "name", header: "Exam" },
+        { id: "examId", accessorKey: "examId", header: "Exam ID" },
+        {
+            id: "student", header: "Student",
+            accessorFn: (r) => {
+                const crId = typeof r.classRoomId === "string" ? r.classRoomId : (r.classRoomId as { _id?: string })?._id;
+                const child = children.find((c) => {
+                    const cId = typeof c.classRoomId === "string" ? c.classRoomId : (c.classRoomId as { _id?: string })?._id;
+                    return cId === crId;
+                });
+                return child ? `${child.firstName} ${child.lastName}` : "—";
+            },
+        },
         { id: "examType", accessorKey: "examType", header: "Type" },
+        {
+            id: "course", header: "Course",
+            accessorFn: (r) => (r.courseId as { name?: string })?.name ?? String(r.courseId ?? "—"),
+        },
+        {
+            id: "classroom", header: "Class",
+            accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId ?? "—"),
+        },
+        {
+            id: "room", header: "Room",
+            accessorFn: (r) => (r.classRoomId as { roomNumber?: string })?.roomNumber ?? "—",
+        },
         { id: "date", header: "Date", accessorFn: (r) => formatDate(r.date) },
         { id: "startTime", accessorKey: "startTime", header: "Start" },
         { id: "endTime", accessorKey: "endTime", header: "End" },
         { id: "totalMarks", accessorKey: "totalMarks", header: "Total Marks" },
         { id: "passingMarks", accessorKey: "passingMarks", header: "Passing Marks" },
+        { id: "instructions", accessorKey: "instructions", header: "Instructions" },
         {
             id: "status", header: "Status", accessorKey: "status",
             cell: ({ getValue }) => <Badge variant={statusVariant(String(getValue()))}>{String(getValue())}</Badge>,
