@@ -9,6 +9,9 @@ export interface INotice extends Document {
   expiryDate?: Date;
   attachments?: string[];
   createdBy: mongoose.Types.ObjectId;
+  createdByModel: "Teacher" | "Employee";
+  modifiedBy?: mongoose.Types.ObjectId;
+  modifiedByModel?: "Teacher" | "Employee";
   status: "draft" | "published" | "archived";
   priority: "low" | "medium" | "high";
   createdAt: Date;
@@ -51,8 +54,21 @@ const noticeSchema = new Schema<INotice>(
     },
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: "Employee",
+      refPath: "createdByModel",
       required: [true, "Creator is required"],
+    },
+    createdByModel: {
+      type: String,
+      enum: ["Teacher", "Employee"],
+      required: [true, "Creator model is required"],
+    },
+    modifiedBy: {
+      type: Schema.Types.ObjectId,
+      refPath: "modifiedByModel",
+    },
+    modifiedByModel: {
+      type: String,
+      enum: ["Teacher", "Employee"],
     },
     status: {
       type: String,

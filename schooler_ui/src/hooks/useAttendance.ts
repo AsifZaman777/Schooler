@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Attendance, Pagination } from "@/types/viewModels";
 
-export function useAttendance(initialParams = {}) {
+export function useAttendance(initialParams = {}, autoFetch = true) {
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,8 +30,8 @@ export function useAttendance(initialParams = {}) {
   );
 
   useEffect(() => {
-    fetchAttendances();
-  }, [fetchAttendances]);
+    if (autoFetch) fetchAttendances();
+  }, [fetchAttendances, autoFetch]);
 
   const createAttendance = async (payload: Partial<Attendance>) => {
     const res = await api.post("/attendance", payload);

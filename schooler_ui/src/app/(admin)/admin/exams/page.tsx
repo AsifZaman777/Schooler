@@ -9,7 +9,7 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useExams } from "@/hooks/useExams";
 import { useCourses } from "@/hooks/useCourses";
 import { useClassRooms } from "@/hooks/useClassRooms";
@@ -18,22 +18,23 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
 
-type TF = { name: string; examType: string; courseId: string; classRoomId: string; date: string; startTime: string; endTime: string; totalMarks: string; passingMarks: string; instructions: string; status: string };
-const blank: TF = { name: "", examType: "midterm", courseId: "", classRoomId: "", date: "", startTime: "", endTime: "", totalMarks: "", passingMarks: "", instructions: "", status: "scheduled" };
+type TF = { examId: string, name: string; examType: string; courseId: string; classRoomId: string; date: string; startTime: string; endTime: string; totalMarks: string; passingMarks: string; instructions: string; status: string };
+const blank: TF = { examId: "", name: "", examType: "midterm", courseId: "", classRoomId: "", date: "", startTime: "", endTime: "", totalMarks: "", passingMarks: "", instructions: "", status: "scheduled" };
 
-const basicFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "name", label: "Exam Name", type: "text", required: true },
+const basicFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "examId", label: "Exam ID", type: "text", required: true, placeholder: "e.g. CS-Q-25-01" },
+    { key: "name", label: "Exam Name", type: "text", required: true, placeholder: "e.g. Mid-Term Examination" },
 ];
 
-const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+const scheduleFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
     { key: "date", label: "Date", type: "date", required: false },
     { key: "startTime", label: "Start Time", type: "time", required: false },
     { key: "endTime", label: "End Time", type: "time", required: false },
 ];
 
-const marksFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "totalMarks", label: "Total Marks", type: "number", required: false },
-    { key: "passingMarks", label: "Passing Marks", type: "number", required: false },
+const marksFields: { key: keyof TF; label: string; type: string; required: boolean; placeholder?: string }[] = [
+    { key: "totalMarks", label: "Total Marks", type: "number", required: false, placeholder: "e.g. 100" },
+    { key: "passingMarks", label: "Passing Marks", type: "number", required: false, placeholder: "e.g. 40" },
 ];
 
 const examTypeOptions = [{ value: "midterm", label: "Midterm" }, { value: "final", label: "Final" }, { value: "quiz", label: "Quiz" }, { value: "assignment", label: "Assignment" }, { value: "practical", label: "Practical" }];
@@ -58,6 +59,7 @@ export default function ExamsPage() {
     function openEdit(ex: Exam) {
         setEditing(ex);
         setForm({
+            examId: ex.examId,
             name: ex.name, examType: ex.examType,
             courseId: String(typeof ex.courseId === "object" ? (ex.courseId as { _id: string })._id : ex.courseId),
             classRoomId: String(typeof ex.classRoomId === "object" ? (ex.classRoomId as { _id: string })._id : ex.classRoomId),
@@ -89,6 +91,7 @@ export default function ExamsPage() {
     }
 
     const columns: ColumnDef<Exam, unknown>[] = [
+        { id: "examId", accessorKey: "examId", header: "Exam ID" },
         { id: "name", accessorKey: "name", header: "Exam Name" },
         { id: "examType", accessorKey: "examType", header: "Type" },
         { id: "course", header: "Course", accessorFn: r => { const c = r.courseId; return typeof c === "object" ? (c as { name: string }).name : String(c); } },
@@ -118,52 +121,66 @@ export default function ExamsPage() {
                         {basicFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && " *"}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>
                             <Label>Course *</Label>
-                            <Select value={form.courseId} onValueChange={v => { f("courseId", v); f("classRoomId", ""); }} required>
-                                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
-                                <SelectContent>
-                                    {courses.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={courses}
+                                value={form.courseId}
+                                onValueChange={v => { f("courseId", v); f("classRoomId", ""); }}
+                                required
+                                placeholder="Select course"
+                                renderItem={c => c.name}
+                                getItemValue={c => c._id}
+                            />
                         </div>
                         <div>
                             <Label>Classroom *</Label>
-                            <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)} required disabled={!form.courseId}>
-                                <SelectTrigger><SelectValue placeholder={form.courseId ? "Select classroom" : "Select course first"} /></SelectTrigger>
-                                <SelectContent>
-                                    {filteredClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={filteredClassRooms}
+                                value={form.classRoomId}
+                                onValueChange={v => f("classRoomId", v)}
+                                required
+                                placeholder={form.courseId ? "Select classroom" : "Select course first"}
+                                renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
+                                getItemValue={cr => cr._id}
+                            />
                         </div>
                         <div>
                             <Label>Type</Label>
-                            <Select value={form.examType} onValueChange={v => f("examType", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{examTypeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={examTypeOptions}
+                                value={form.examType}
+                                onValueChange={v => f("examType", v)}
+                                placeholder="Select exam type"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         {scheduleFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} placeholder={field.placeholder} />
                             </div>
                         ))}
                         {marksFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}</Label>
-                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
+                                <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>{statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v)}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                            />
                         </div>
                         <div className="col-span-2"><Label>Instructions</Label><Input value={form.instructions} onChange={e => f("instructions", e.target.value)} /></div>
                     </div>

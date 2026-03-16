@@ -1,63 +1,130 @@
 "use client";
-import { Bell, Menu, LogOut } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, LogOut, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveNotices } from "@/hooks/useNotices";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface HeaderProps {
     title: string;
     onMenuClick?: () => void;
 }
 
+const priorityColor: Record<string, string> = {
+    high: "destructive",
+    medium: "default",
+    low: "secondary",
+};
+
 export function Header({ title, onMenuClick }: HeaderProps) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
 
+    const isTeacher = user?.role === "teacher";
+    const { notices, loading: noticesLoading } = useActiveNotices(isTeacher ? "teacher" : undefined);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+
     const userName = user?.name || user?.email || "User";
     const userRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "";
-    const profileImage = user?.profile?.profileImage || user?.image;
-
-    // Get initials from name
-    const getInitials = (name: string) => {
-        const parts = name.split(" ");
-        if (parts.length >= 2) {
-            return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
-    };
 
     const handleLogout = async () => {
         await signOut({ redirect: false });
         router.push("/login");
     };
 
+    const toggle = (id: string) => setExpandedId(prev => (prev === id ? null : id));
+
     return (
         <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
             <div className="flex items-center gap-3">
-                {onMenuClick && (
-                    <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-                        <Menu size={18} />
-                    </Button>
-                )}
+                <SidebarTrigger className="-ml-1" />
                 <h1 className="text-sm font-semibold text-[--foreground]">{title}</h1>
             </div>
+
             <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell size={17} />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[--danger]" />
-                </Button>
+                {/* ── Bell / Notices ── */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="relative">
+                            <Bell size={17} />
+                            {notices.length > 0 && (
+                                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[--danger]" />
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0" align="end">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[--border]">
+                            <span className="text-sm font-semibold">Notices</span>
+                            {notices.length > 0 && (
+                                <Badge variant="secondary" className="text-xs">{notices.length}</Badge>
+                            )}
+                        </div>
+
+                        <div className="max-h-105 overflow-y-auto divide-y divide-[--border]">
+                            {noticesLoading ? (
+                                <div className="flex items-center justify-center py-8 gap-2 text-sm text-[--muted-foreground]">
+                                    <Loader2 size={15} className="animate-spin" /> Loading…
+                                </div>
+                            ) : notices.length === 0 ? (
+                                <p className="py-8 text-center text-sm text-[--muted-foreground]">
+                                    No active notices
+                                </p>
+                            ) : (
+                                notices.map(notice => {
+                                    const isOpen = expandedId === notice._id;
+                                    return (
+                                        <div key={notice._id} className="px-4 py-3">
+                                            <button
+                                                onClick={() => toggle(notice._id)}
+                                                className="flex w-full items-start justify-between gap-2 text-left group"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-sm font-medium text-[--foreground] truncate">
+                                                            {notice.title}
+                                                        </span>
+                                                        <Badge
+                                                            variant={priorityColor[notice.priority] as "destructive" | "default" | "secondary" ?? "secondary"}
+                                                            className="text-[10px] px-1.5 py-0 shrink-0"
+                                                        >
+                                                            {notice.priority}
+                                                        </Badge>
+                                                    </div>
+                                                    <span className="text-xs text-[--muted-foreground] capitalize">
+                                                        {notice.category}
+                                                        {notice.publishDate
+                                                            ? ` · ${new Date(notice.publishDate).toLocaleDateString()}`
+                                                            : ""}
+                                                    </span>
+                                                </div>
+                                                <ChevronDown
+                                                    size={15}
+                                                    className={`shrink-0 mt-0.5 text-[--muted-foreground] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                                                />
+                                            </button>
+
+                                            {isOpen && (
+                                                <p className="mt-2 text-sm text-[--foreground] whitespace-pre-wrap leading-relaxed border-t border-[--border] pt-2">
+                                                    {notice.content}
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                {/* ── User / Logout ── */}
                 <Popover>
                     <PopoverTrigger asChild>
                         <button className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
-                            {/* <Avatar size="sm">
-                                {profileImage && <AvatarImage src={profileImage} alt={userName} />}
-                                <AvatarFallback className="text-xs font-medium">
-                                    {getInitials(userName)}
-                                </AvatarFallback>
-                            </Avatar> */}
                             {!isLoading && (
                                 <div className="hidden sm:flex flex-col text-left">
                                     <span className="text-sm font-medium text-[--foreground] leading-tight">

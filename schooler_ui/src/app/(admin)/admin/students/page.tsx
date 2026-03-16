@@ -9,14 +9,16 @@ import { FormDialog } from "@/components/reusable/FormDialog";
 import { ConfirmDialog } from "@/components/reusable/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormCombobox } from "@/components/reusable/FormCombobox";
 import { useStudents } from "@/hooks/useStudents";
 import { useParents } from "@/hooks/useParents";
 import { useClassRooms } from "@/hooks/useClassRooms";
-import { Student, Parent, ClassRoom } from "@/types/viewModels";
+import { Student } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+
+
 
 type TF = {
     firstName: string; lastName: string; email: string; phone: string; gender: string; dateOfBirth: string; status: string;
@@ -106,7 +108,12 @@ export default function StudentsPage() {
             if (editing) { await updateStudent(editing._id, payload); toast.success("Student updated"); }
             else { await createStudent(payload); toast.success("Student added"); }
             setOpen(false);
-        } catch { toast.error("Failed to save"); } finally { setBusy(false); }
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ?? err?.message ?? "Something went wrong";
+            toast.error(message);
+        }
+        finally { setBusy(false); }
     }
     async function handleDelete() {
         if (!confirm) return; setBusy(true);
@@ -188,14 +195,16 @@ export default function StudentsPage() {
                         ))}
                         <div>
                             <Label>Gender*</Label>
-                            <Select value={form.gender} onValueChange={v => f("gender", v)} required>
-                                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                <SelectContent>
-                                    {genderOptions.map(opt => (
-                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={genderOptions}
+                                value={form.gender}
+                                onValueChange={v => f("gender", v ?? "")}
+                                placeholder="Select gender"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
+                                required
+                            />
                         </div>
                         <div className="col-span-2">
                             <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p>
@@ -212,43 +221,47 @@ export default function StudentsPage() {
                         ))}
                         <div>
                             <Label>Status</Label>
-                            <Select value={form.status} onValueChange={v => f("status", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                <SelectContent>
-                                    {statusOptions.map(opt => (
-                                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={statusOptions}
+                                value={form.status}
+                                onValueChange={v => f("status", v ?? "")}
+                                placeholder="Select status"
+                                renderItem={opt => opt.label}
+                                getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
+                            />
                         </div>
                         <div className="col-span-2">
                             <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Assignment</p>
                         </div>
                         <div>
                             <Label>Parent</Label>
-                            <Select value={form.parentId} onValueChange={v => f("parentId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select parent" /></SelectTrigger>
-                                <SelectContent>
-                                    {parents.map(parent => (
-                                        <SelectItem key={parent._id} value={parent._id}>
-                                            {parent.parentId ? <span className="font-mono text-xs text-blue-600 mr-1">{parent.parentId}</span> : null}{parent.firstName} {parent.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={parents}
+                                value={form.parentId}
+                                onValueChange={v => f("parentId", v ?? "")}
+                                placeholder="Select parent"
+                                getItemValue={p => p._id}
+                                getItemLabel={p => `${p.firstName} ${p.lastName}`}
+                                renderItem={p => (
+                                    <>
+                                        {p.parentId ? <span className="font-mono text-xs text-blue-600 mr-2">{p.parentId}</span> : null}
+                                        {p.firstName} {p.lastName}
+                                    </>
+                                )}
+                            />
                         </div>
                         <div>
                             <Label>ClassRoom</Label>
-                            <Select value={form.classRoomId} onValueChange={v => f("classRoomId", v)}>
-                                <SelectTrigger><SelectValue placeholder="Select classroom" /></SelectTrigger>
-                                <SelectContent>
-                                    {classRooms.map(cls => (
-                                        <SelectItem key={cls._id} value={cls._id}>
-                                            {cls.name} - {cls.roomNumber}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormCombobox
+                                items={classRooms}
+                                value={form.classRoomId}
+                                onValueChange={v => f("classRoomId", v ?? "")}
+                                placeholder="Select classroom"
+                                getItemValue={c => c._id}
+                                getItemLabel={c => `${c.name} - ${c.roomNumber}`}
+                                renderItem={c => `${c.name} - ${c.roomNumber}`}
+                            />
                         </div>
                         <div className="col-span-2">
                             <p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p>

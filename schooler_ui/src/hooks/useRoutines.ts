@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Routine, Pagination } from "@/types/viewModels";
 
-export function useRoutines(initialParams = {}) {
+export function useRoutines(initialParams = {}, autoFetch = true) {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export function useRoutines(initialParams = {}) {
   );
 
   useEffect(() => {
-    fetchRoutines();
+    if (autoFetch) fetchRoutines();
   }, [fetchRoutines]);
 
   const createRoutine = async (payload: Partial<Routine>) => {
@@ -50,6 +50,34 @@ export function useRoutines(initialParams = {}) {
     await fetchRoutines();
   };
 
+  const fetchRoutinesByClassRoom = useCallback(
+    async (classRoomId: string): Promise<Record<string, Routine[]>> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.get(`/routines/classroom/${classRoomId}`);
+        const grouped = res.data.data as Record<string, Routine[]>;
+        setRoutines(Object.values(grouped).flat());
+        return grouped;
+      } catch (err) {
+        setError((err as Error).message);
+        setRoutines([]);
+        return {};
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const fetchRoutinesByTeacher = useCallback(
+    async (teacherId: string): Promise<Record<string, Routine[]>> => {
+      const res = await api.get(`/routines/teacher/${teacherId}`);
+      return res.data.data as Record<string, Routine[]>;
+    },
+    [],
+  );
+
   return {
     routines,
     pagination,
@@ -59,5 +87,7 @@ export function useRoutines(initialParams = {}) {
     createRoutine,
     updateRoutine,
     deleteRoutine,
+    fetchRoutinesByClassRoom,
+    fetchRoutinesByTeacher,
   };
 }

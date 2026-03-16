@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useTeachers } from "@/hooks/useTeachers";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useParents } from "@/hooks/useParents";
 import { Copy, Download, RefreshCw, QrCode, UserCheck, ChevronRight } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -28,7 +29,7 @@ interface Props {
     onClose: () => void;
 }
 
-type Role = "teacher" | "employee" | "admin";
+type Role = "teacher" | "employee" | "parent";
 
 interface PersonOption {
     id: string;
@@ -54,7 +55,7 @@ function buildToken(payload: {
 const ROLES: { value: Role; label: string; color: string }[] = [
     { value: "teacher", label: "Teacher", color: "bg-blue-50 text-blue-700 border-blue-200" },
     { value: "employee", label: "Employee", color: "bg-amber-50 text-amber-700 border-amber-200" },
-    { value: "admin", label: "Admin", color: "bg-purple-50 text-purple-700 border-purple-200" },
+    { value: "parent", label: "Parent", color: "bg-green-50 text-green-700 border-green-200" },
 ];
 
 export function RegisterUserModal({ open, onClose }: Props) {
@@ -68,6 +69,7 @@ export function RegisterUserModal({ open, onClose }: Props) {
 
     const { teachers } = useTeachers();
     const { employees } = useEmployees();
+    const { parents } = useParents();
 
     // Reset when role changes
     useEffect(() => {
@@ -98,8 +100,8 @@ export function RegisterUserModal({ open, onClose }: Props) {
             }));
         switch (role) {
             case "teacher": return map(teachers);
-            case "employee":
-            case "admin": return map(employees);
+            case "employee": return map(employees);
+            case "parent": return map(parents);
             default: return [];
         }
     })();

@@ -3,7 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import type { ClassRoom, Pagination } from "@/types/viewModels";
 
-export function useClassRooms(initialParams = {}) {
+export function useClassRooms(
+  initialParams = {},
+  autoFetch = true,
+  teacherId?: string,
+) {
   const [classRooms, setClassRooms] = useState<ClassRoom[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,9 +33,22 @@ export function useClassRooms(initialParams = {}) {
     [],
   );
 
+  const fetchClassRoomsByTeacher = useCallback(
+    async (id: string): Promise<ClassRoom[]> => {
+      const res = await api.get(`/classrooms/teacher/${id}`);
+      return res.data.data as ClassRoom[];
+    },
+    [],
+  );
+
   useEffect(() => {
-    fetchClassRooms();
-  }, [fetchClassRooms]);
+    if (!autoFetch) return;
+    if (teacherId) {
+      fetchClassRoomsByTeacher(teacherId).then(setClassRooms);
+    } else {
+      fetchClassRooms();
+    }
+  }, [fetchClassRooms, fetchClassRoomsByTeacher, autoFetch, teacherId]);
 
   const createClassRoom = async (payload: Partial<ClassRoom>) => {
     const res = await api.post("/classrooms", payload);
@@ -59,5 +76,6 @@ export function useClassRooms(initialParams = {}) {
     createClassRoom,
     updateClassRoom,
     deleteClassRoom,
+    fetchClassRoomsByTeacher,
   };
 }

@@ -1,13 +1,28 @@
 "use client";
+import { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
 import { DataTable } from "@/components/datatable/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useRoutines } from "@/hooks/useRoutines";
+import { useAuth } from "@/hooks/useAuth";
 import { Routine } from "@/types/viewModels";
 
 export default function TeacherRoutinesPage() {
-    const { routines, loading } = useRoutines();
+    const { referenceId } = useAuth();
+    const { fetchRoutinesByTeacher } = useRoutines();
+    const [routines, setRoutines] = useState<Routine[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!referenceId) return;
+        setLoading(true);
+        fetchRoutinesByTeacher(referenceId)
+            .then((grouped) => setRoutines(Object.values(grouped).flat()))
+            .catch((err) => setError((err as Error).message))
+            .finally(() => setLoading(false));
+    }, [referenceId, fetchRoutinesByTeacher]);
 
     const columns: ColumnDef<Routine, unknown>[] = [
         { id: "subject", accessorKey: "subject", header: "Subject" },
@@ -24,6 +39,9 @@ export default function TeacherRoutinesPage() {
             <Header title="My Routines" />
             <main className="p-5 space-y-4">
                 <h2 className="text-base font-semibold text-[--foreground]">My Class Routines</h2>
+                {error && (
+                    <div className="card p-4 text-sm text-red-500">{error}</div>
+                )}
                 {loading ? (
                     <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
                 ) : (

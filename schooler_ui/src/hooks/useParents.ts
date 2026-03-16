@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
-import type { Parent, Pagination } from "@/types/viewModels";
+import type { Parent, Student, Pagination } from "@/types/viewModels";
 
-export function useParents(initialParams = {}) {
+export function useParents(initialParams = {}, autoFetch = true) {
   const [parents, setParents] = useState<Parent[]>([]);
+  const [children, setChildren] = useState<Student[]>([]);
+  const [childrenLoading, setChildrenLoading] = useState(false);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +32,8 @@ export function useParents(initialParams = {}) {
   );
 
   useEffect(() => {
-    fetchParents();
-  }, [fetchParents]);
+    if (autoFetch) fetchParents();
+  }, [autoFetch, fetchParents]);
 
   const createParent = async (payload: Partial<Parent>) => {
     const res = await api.post("/parents", payload);
@@ -50,12 +52,30 @@ export function useParents(initialParams = {}) {
     await fetchParents();
   };
 
+  const fetchChildren = useCallback(
+    async (parentId: string): Promise<Student[]> => {
+      setChildrenLoading(true);
+      try {
+        const res = await api.get(`/parents/${parentId}/children`);
+        const data: Student[] = res.data.data ?? [];
+        setChildren(data);
+        return data;
+      } finally {
+        setChildrenLoading(false);
+      }
+    },
+    [],
+  );
+
   return {
     parents,
+    children,
+    childrenLoading,
     pagination,
     loading,
     error,
     fetchParents,
+    fetchChildren,
     createParent,
     updateParent,
     deleteParent,

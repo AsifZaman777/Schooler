@@ -30,7 +30,7 @@ export const errorHandler = (
 
   return res.status(500).json({
     success: false,
-    message: "Internal server error",
+    message: err.message,
     ...(process.env.NODE_ENV === "development" && {
       error: err.message,
       stack: err.stack,
