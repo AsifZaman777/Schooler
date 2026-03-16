@@ -37,22 +37,23 @@ export function FormCombobox<T>({
     disabled,
     className,
 }: FormComboboxProps<T>) {
-    const selectedItem = items.find(item => getItemValue(item) === value);
+    const itemToStringLabel = getItemLabel
+        ? (id: string) => {
+            const found = items.find(i => getItemValue(i) === id);
+            return found ? getItemLabel(found) : id;
+        }
+        : undefined;
 
     return (
         <div className={className}>
             <Combobox
                 items={items}
+                value={value}
                 onValueChange={onValueChange}
                 disabled={disabled}
-                value={value}
+                itemToStringLabel={itemToStringLabel}
             >
-                <ComboboxInput
-                    placeholder={placeholder}
-                    required={required}
-                    disabled={disabled}
-                    value={selectedItem && getItemLabel ? getItemLabel(selectedItem) : value}
-                />
+                <ComboboxInput placeholder={placeholder} required={required} disabled={disabled} />
                 <ComboboxContent>
                     <ComboboxEmpty>{emptyText}</ComboboxEmpty>
                     <ComboboxList>

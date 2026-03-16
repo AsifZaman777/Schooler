@@ -117,6 +117,7 @@ export default function ClassRoomsPage() {
                                 placeholder="Select department"
                                 renderItem={dept => dept.name}
                                 getItemValue={dept => dept._id}
+                                getItemLabel={dept => dept.name}
                             />
                         </div>
                         <div>
@@ -128,6 +129,7 @@ export default function ClassRoomsPage() {
                                 placeholder="Select course"
                                 renderItem={course => course.name}
                                 getItemValue={course => course._id}
+                                getItemLabel={course => course.name}
                             />
                         </div>
                         {detailFields.map(field => (
@@ -145,6 +147,7 @@ export default function ClassRoomsPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                     </div>

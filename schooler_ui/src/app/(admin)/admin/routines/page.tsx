@@ -138,6 +138,7 @@ export default function RoutinesPage() {
                             placeholder="Select classroom"
                             renderItem={cr => `${cr.name} ${cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}`}
                             getItemValue={cr => cr._id}
+                            getItemLabel={cr => `${cr.name} ${cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}`}
                         />
                     </div>
 
@@ -151,6 +152,7 @@ export default function RoutinesPage() {
                             placeholder="Select teacher"
                             renderItem={t => `${t.firstName} ${t.lastName}`}
                             getItemValue={t => t._id}
+                            getItemLabel={t => `${t.firstName} ${t.lastName}`}
                         />
                     </div>
 
@@ -171,6 +173,7 @@ export default function RoutinesPage() {
                                 placeholder="Select day"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
 
@@ -202,6 +205,7 @@ export default function RoutinesPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                     </div>

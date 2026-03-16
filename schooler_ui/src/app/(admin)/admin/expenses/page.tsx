@@ -269,6 +269,7 @@ export default function ExpensesPage() {
                                 placeholder="Select category"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         {basicFields.map(field => (
@@ -286,6 +287,7 @@ export default function ExpensesPage() {
                                 placeholder="Select payment method"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
@@ -297,6 +299,7 @@ export default function ExpensesPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>

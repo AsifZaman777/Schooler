@@ -106,6 +106,7 @@ export default function CoursesPage() {
                                 placeholder="Select department"
                                 renderItem={dept => dept.name}
                                 getItemValue={dept => dept._id}
+                                getItemLabel={dept => dept.name}
                             />
                         </div>
                         {detailFields.map(field => (
@@ -123,6 +124,7 @@ export default function CoursesPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                     </div>

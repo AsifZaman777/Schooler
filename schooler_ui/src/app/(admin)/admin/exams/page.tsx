@@ -134,6 +134,7 @@ export default function ExamsPage() {
                                 placeholder="Select course"
                                 renderItem={c => c.name}
                                 getItemValue={c => c._id}
+                                getItemLabel={c => c.name}
                             />
                         </div>
                         <div>
@@ -146,6 +147,7 @@ export default function ExamsPage() {
                                 placeholder={form.courseId ? "Select classroom" : "Select course first"}
                                 renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                                 getItemValue={cr => cr._id}
+                                getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div>
@@ -157,6 +159,7 @@ export default function ExamsPage() {
                                 placeholder="Select exam type"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         {scheduleFields.map(field => (
@@ -180,6 +183,7 @@ export default function ExamsPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div className="col-span-2"><Label>Instructions</Label><Input value={form.instructions} onChange={e => f("instructions", e.target.value)} /></div>

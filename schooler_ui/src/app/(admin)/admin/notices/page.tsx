@@ -157,6 +157,7 @@ export default function NoticesPage() {
                                 placeholder="Select category"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
@@ -168,6 +169,7 @@ export default function NoticesPage() {
                                 placeholder="Select priority"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div className="col-span-2">
@@ -196,6 +198,7 @@ export default function NoticesPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         {dateFields.map(field => (

@@ -371,6 +371,7 @@ export default function PaymentsPage() {
                                     placeholder="Select status"
                                     renderItem={opt => opt.label}
                                     getItemValue={opt => opt.value}
+                                    getItemLabel={opt => opt.label}
                                 />
                             </div>
                         </div>
@@ -396,6 +397,7 @@ export default function PaymentsPage() {
                                 placeholder="Select student"
                                 renderItem={s => `${s.firstName} ${s.lastName} ${s.studentId ? `(${s.studentId})` : ""}`}
                                 getItemValue={s => s._id}
+                                getItemLabel={s => `${s.firstName} ${s.lastName} ${s.studentId ? `(${s.studentId})` : ""}`}
                             />
                         </div>
 
@@ -409,6 +411,7 @@ export default function PaymentsPage() {
                                 placeholder="Select course"
                                 renderItem={c => `${c.name} (${c.code})`}
                                 getItemValue={c => c._id}
+                                getItemLabel={c => `${c.name} (${c.code})`}
                             />
                         </div>
 
@@ -428,6 +431,8 @@ export default function PaymentsPage() {
                                 placeholder="Select payment type"
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
+                                getItemLabel={o => o.label}
+
                             />
                         </div>
 
@@ -441,6 +446,8 @@ export default function PaymentsPage() {
                                 placeholder="Select payment method"
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
+                                getItemLabel={o => o.label}
+
                             />
                         </div>
 
@@ -454,6 +461,7 @@ export default function PaymentsPage() {
                                 placeholder="Select payment status"
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
+                                getItemLabel={o => o.label}
                             />
                         </div>
 

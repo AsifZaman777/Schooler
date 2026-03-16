@@ -181,6 +181,7 @@ export default function TeachersPage() {
                                 required
                                 getItemValue={opt => opt.value}
                                 renderItem={opt => opt.label}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         {teacherFields.map(field => (
@@ -204,6 +205,7 @@ export default function TeachersPage() {
                                 placeholder="Select status"
                                 getItemValue={opt => opt.value}
                                 renderItem={opt => opt.label}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
@@ -215,6 +217,7 @@ export default function TeachersPage() {
                                 placeholder="Select department"
                                 getItemValue={dept => dept._id}
                                 renderItem={dept => dept.name}
+                                getItemLabel={dept => dept.name}
                             />
                         </div>
                         <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>

@@ -253,6 +253,7 @@ export default function AttendancePage() {
                                     placeholder="Select classroom"
                                     renderItem={cr => cr.name}
                                     getItemValue={cr => cr._id}
+                                    getItemLabel={cr => cr.name}
                                 />
                             </div>
                         </div>
@@ -291,6 +292,7 @@ export default function AttendancePage() {
                                     placeholder="Select classroom"
                                     renderItem={cr => cr.name}
                                     getItemValue={cr => cr._id}
+                                    getItemLabel={cr => cr.name}
                                 />
                             </div>
                             <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
@@ -344,6 +346,7 @@ export default function AttendancePage() {
                             placeholder="Select status"
                             renderItem={opt => opt.label}
                             getItemValue={opt => opt.value}
+                            getItemLabel={opt => opt.label}
                         />
                     </div>
                     <div className="flex flex-col gap-1">
@@ -388,6 +391,7 @@ export default function AttendancePage() {
                             placeholder="Select status"
                             renderItem={opt => opt.label}
                             getItemValue={opt => opt.value}
+                            getItemLabel={opt => opt.label}
                         />
                     </div>
                     <div className="flex flex-col gap-1">

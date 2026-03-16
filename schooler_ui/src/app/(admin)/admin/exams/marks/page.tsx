@@ -15,16 +15,7 @@ import { ClassRoom, Student } from "@/types/viewModels";
 import { toast } from "@/lib/toast";
 import { Save, CheckCircle2, XCircle, Loader2, ClipboardList } from "lucide-react";
 import api from "@/lib/axios";
-
-function computeGrade(obtained: number, total: number): string {
-    const pct = total > 0 ? (obtained / total) * 100 : 0;
-    if (pct >= 90) return "A+";
-    if (pct >= 80) return "A";
-    if (pct >= 70) return "B";
-    if (pct >= 60) return "C";
-    if (pct >= 50) return "D";
-    return "F";
-}
+import { computeGrade } from "@/utils/computeExamGrade";
 
 type MarkRow = {
     marksObtained: string;   // string for controlled input
@@ -223,10 +214,10 @@ export default function ExamMarksPage() {
                 />
             ),
         },
-        {
-            id: "grade", accessorKey: "grade", header: "Grade",
-            cell: ({ getValue }) => gradeBadge(String(getValue() ?? "")),
-        },
+        // {
+        //     id: "grade", accessorKey: "grade", header: "Grade",
+        //     cell: ({ getValue }) => gradeBadge(String(getValue() ?? "")),
+        // },
         {
             id: "remarks", accessorKey: "remarks", header: "Remarks",
             cell: ({ row: { original: r } }) => (
@@ -248,6 +239,7 @@ export default function ExamMarksPage() {
                     placeholder="Select status"
                     renderItem={opt => opt.label}
                     getItemValue={opt => opt.value}
+                    getItemLabel={opt => opt.label}
                 />
             ),
         },
@@ -341,6 +333,7 @@ export default function ExamMarksPage() {
                                 placeholder="Select a classroom…"
                                 renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                                 getItemValue={cr => cr._id}
+                                getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -357,6 +350,7 @@ export default function ExamMarksPage() {
                                 }
                                 renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
                                 getItemValue={ex => ex._id}
+                                getItemLabel={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
                             />
                         </div>
                     </div>

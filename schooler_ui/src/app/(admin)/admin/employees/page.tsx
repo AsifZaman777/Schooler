@@ -45,12 +45,12 @@ const employmentFields: { key: keyof TF; label: string; type: string; required: 
 
 const positionOptions = [
     { value: "admin", label: "Admin" },
-    { value: "teacher", label: "Teacher" },
-    { value: "staff", label: "Staff" },
-    { value: "accountant", label: "Accountant" },
-    { value: "librarian", label: "Librarian" },
-    { value: "security", label: "Security" },
-    { value: "janitor", label: "Janitor" },
+    // { value: "teacher", label: "Teacher" },
+    // { value: "staff", label: "Staff" },
+    // { value: "accountant", label: "Accountant" },
+    // { value: "librarian", label: "Librarian" },
+    // { value: "security", label: "Security" },
+    // { value: "janitor", label: "Janitor" },
 ];
 
 const emergencyFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
@@ -140,7 +140,7 @@ export default function EmployeesPage() {
                 </div>
             ) : "—"
         },
-        { id: "department", header: "Department", accessorFn: r => (r.department as { name?: string })?.name ?? String(r.department) },
+        // { id: "department", header: "Department", accessorFn: r => (r.department as { name?: string })?.name ?? "—" },
         { id: "joiningDate", header: "Joined", accessorFn: r => formatDate(r.joiningDate) },
         { id: "salary", header: "Salary", accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
@@ -178,6 +178,7 @@ export default function EmployeesPage() {
                                 placeholder="Select gender"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                     </div>
@@ -201,6 +202,7 @@ export default function EmployeesPage() {
                                 placeholder="Select role"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
@@ -212,6 +214,7 @@ export default function EmployeesPage() {
                                 placeholder="Select department"
                                 renderItem={dept => dept.name}
                                 getItemValue={dept => dept._id}
+                                getItemLabel={dept => dept.name}
                             />
                         </div>
                         {employmentFields.map(field => (
@@ -229,6 +232,8 @@ export default function EmployeesPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
+
                             />
                         </div>
                     </div>

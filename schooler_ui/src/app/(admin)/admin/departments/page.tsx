@@ -99,8 +99,9 @@ export default function DepartmentsPage() {
                                 value={form.headOfDepartment}
                                 onValueChange={v => f("headOfDepartment", v)}
                                 placeholder="Select teacher"
-                                renderItem={teacher => teacher.firstName + " " + teacher.lastName}
+                                renderItem={teacher => teacher.teacherId + "-" + teacher.firstName + " " + teacher.lastName}
                                 getItemValue={teacher => teacher._id}
+                                getItemLabel={teacher => teacher.teacherId + "-" + teacher.firstName + " " + teacher.lastName}
                             />
                         </div>
                         <div>
@@ -112,6 +113,7 @@ export default function DepartmentsPage() {
                                 placeholder="Select status"
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
+                                getItemLabel={opt => opt.label}
                             />
                         </div>
                     </div>
