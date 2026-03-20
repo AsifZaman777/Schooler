@@ -5,6 +5,7 @@ import type { Student, Pagination } from "@/types/viewModels";
 
 export function useStudents(initialParams = {}, autoFetch = true) {
   const [students, setStudents] = useState<Student[]>([]);
+  const [student, setStudent] = useState<Student | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,20 @@ export function useStudents(initialParams = {}, autoFetch = true) {
     [],
   );
 
+  const fetchStudent = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/students/${id}`);
+      setStudent(res.data.data);
+      return res.data.data;
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (autoFetch) fetchStudents();
   }, [fetchStudents, autoFetch]);
@@ -52,10 +67,12 @@ export function useStudents(initialParams = {}, autoFetch = true) {
 
   return {
     students,
+    student,
     pagination,
     loading,
     error,
     fetchStudents,
+    fetchStudent,
     createStudent,
     updateStudent,
     deleteStudent,

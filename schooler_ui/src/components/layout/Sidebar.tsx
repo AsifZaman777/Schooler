@@ -32,7 +32,7 @@ function isNavGroup(item: NavItemOrGroup): item is NavGroup {
 }
 
 interface AppSidebarProps {
-    role: "admin" | "teacher" | "parent";
+    role: "admin" | "teacher" | "parent" | "student";
     navItems: NavItemOrGroup[];
     logo?: React.ReactNode;
 }

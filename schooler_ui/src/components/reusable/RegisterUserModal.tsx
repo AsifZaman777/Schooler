@@ -21,6 +21,7 @@ import {
 import { useTeachers } from "@/hooks/useTeachers";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useParents } from "@/hooks/useParents";
+import { useStudents } from "@/hooks/useStudents";
 import { Copy, Download, RefreshCw, QrCode, UserCheck, ChevronRight } from "lucide-react";
 import { toast } from "@/lib/toast";
 
@@ -29,7 +30,7 @@ interface Props {
     onClose: () => void;
 }
 
-type Role = "teacher" | "employee" | "parent";
+type Role = "teacher" | "employee" | "parent" | "student";
 
 interface PersonOption {
     id: string;
@@ -54,6 +55,7 @@ function buildToken(payload: {
 
 const ROLES: { value: Role; label: string; color: string }[] = [
     { value: "teacher", label: "Teacher", color: "bg-blue-50 text-blue-700 border-blue-200" },
+    { value: "student", label: "Student", color: "bg-purple-50 text-purple-700 border-purple-200" },
     { value: "employee", label: "Employee", color: "bg-amber-50 text-amber-700 border-amber-200" },
     { value: "parent", label: "Parent", color: "bg-green-50 text-green-700 border-green-200" },
 ];
@@ -70,6 +72,7 @@ export function RegisterUserModal({ open, onClose }: Props) {
     const { teachers } = useTeachers();
     const { employees } = useEmployees();
     const { parents } = useParents();
+    const { students } = useStudents({ limit: 1000 });
 
     // Reset when role changes
     useEffect(() => {
@@ -96,10 +99,12 @@ export function RegisterUserModal({ open, onClose }: Props) {
                 id: p._id,
                 name: `${p.firstName} ${p.lastName}`,
                 email: p.email,
-                customId: p.teacherId ?? p.employeeId,
+                customId: p.teacherId ?? p.employeeId ?? p.studentId,
             }));
+
         switch (role) {
             case "teacher": return map(teachers);
+            case "student": return map(students);
             case "employee": return map(employees);
             case "parent": return map(parents);
             default: return [];
@@ -203,7 +208,7 @@ export function RegisterUserModal({ open, onClose }: Props) {
                             {/* Role picker */}
                             <div>
                                 <Label className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide">Role</Label>
-                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                <div className="grid grid-cols-2 gap-2 mt-2">
                                     {ROLES.map((r) => (
                                         <button
                                             key={r.value}
