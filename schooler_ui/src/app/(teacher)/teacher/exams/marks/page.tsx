@@ -224,6 +224,7 @@ export default function TeacherExamMarksPage() {
                     placeholder="Select status"
                     renderItem={opt => opt.label}
                     getItemValue={opt => opt.value}
+                    getItemLabel={opt => opt.label}
                 />
             ),
         },
@@ -320,6 +321,7 @@ export default function TeacherExamMarksPage() {
                                 placeholder="Select a classroom…"
                                 renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                                 getItemValue={cr => cr._id}
+                                getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -336,6 +338,7 @@ export default function TeacherExamMarksPage() {
                                 }
                                 renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
                                 getItemValue={ex => ex._id}
+                                getItemLabel={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
                             />
                         </div>
                     </div>

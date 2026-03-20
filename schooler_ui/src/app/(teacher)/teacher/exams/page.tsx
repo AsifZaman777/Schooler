@@ -301,6 +301,7 @@ export default function TeacherExamsPage() {
                                     `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`
                                 }
                                 getItemValue={(cr) => cr._id}
+                                getItemLabel={(cr) => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div>
@@ -312,6 +313,7 @@ export default function TeacherExamsPage() {
                                 placeholder="Select exam type"
                                 renderItem={(opt) => opt.label}
                                 getItemValue={(opt) => opt.value}
+                                getItemLabel={(opt) => opt.label}
                             />
                         </div>
                         <div>
@@ -365,6 +367,7 @@ export default function TeacherExamsPage() {
                                 placeholder="Select status"
                                 renderItem={(opt) => opt.label}
                                 getItemValue={(opt) => opt.value}
+                                getItemLabel={(opt) => opt.label}
                             />
                         </div>
                         <div className="col-span-2">
